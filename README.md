@@ -159,8 +159,13 @@ media:                              # required
     alt: Optional alt text
   - src: project/detail.jpg         # caption and alt are optional
 client: Client Name                 # optional
-role: Design, Art Direction         # optional
+role: Design, Art Direction         # optional — your role
 url: https://my-project.example     # optional — shown as a link on the page
+credits:                            # optional — everyone else involved
+  - name: Jane Doe                  # required
+    role: Photography               # optional — what they contributed
+    url: https://janedoe.com        # optional — links their name
+
 ---
 
 Write your project description here in plain Markdown. As long or short as

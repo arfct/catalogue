@@ -225,6 +225,10 @@ body:has(.index-hero) .site-header { display: none; }
   gap: 0.375rem;
 }
 
+.credit-list {
+  list-style: none;
+}
+
 .entry__captions {
   list-style: none;
   display: flex;

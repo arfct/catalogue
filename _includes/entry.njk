@@ -21,6 +21,19 @@ layout: layout.njk
         <dt>Role</dt>
         <dd>{{ role }}</dd>
       {% endif %}
+      {% if credits %}
+        <dt>With</dt>
+        <dd>
+          <ul class="credit-list">
+            {% for person in credits %}
+              <li>
+                {% if person.url %}<a href="{{ person.url }}">{{ person.name }}</a>{% else %}{{ person.name }}{% endif %}
+                {%- if person.role %} — {{ person.role }}{% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </dd>
+      {% endif %}
       {% if url %}
         <dt>Link</dt>
         <dd><a href="{{ url }}">{{ url | replace("https://", "") | replace("http://", "") }}</a></dd>

@@ -10,6 +10,12 @@ media:
     caption: Detail of the typographic system
 client: Example Client
 role: Art Direction, Design
+credits:                      # everyone else involved — name required, rest optional
+  - name: Jane Doe
+    role: Photography
+    url: https://example.com
+  - name: Sam Lee
+    role: Sound design
 ---
 
 A short description of the project. What was the brief, what did you make,

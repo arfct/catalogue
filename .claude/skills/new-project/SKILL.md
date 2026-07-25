@@ -16,11 +16,11 @@ Create `projects/<slug>.md` plus its media, matching the site's existing convent
 
 Pick the mode by what the user gave you:
 
-- **GitHub repo** — `gh repo view <org>/<name>`, then README and source for what it is, when, and what it's built with.
+- **GitHub repo** — `gh repo view <org>/<name>`, then README and source for what it is, when, and what it's built with. Note collaborator candidates: co-committers, README acknowledgements or credits sections.
 - **Local folder** — read its README and code directly.
-- **Nothing** — interview the user: one question at a time, plain language, no jargon. Cover: what is it called? what is it / what did you make? when (year + month)? what was your role? client, if any? a few tags?
+- **Nothing** — interview the user: one question at a time, plain language, no jargon. Cover: what is it called? what is it / what did you make? when (year + month)? what was your role? who else was involved — collaborators, photographers, a client's team? client, if any? a few tags?
 
-Facts you infer (especially the date, role, and tags) are guesses — confirm them with the user instead of presenting them as fact.
+Facts you infer (especially the date, role, and tags) are guesses — confirm them with the user instead of presenting them as fact. Collaborators especially: never write a `credits:` entry the user hasn't confirmed, and never credit bots or automated committers.
 
 ## 2. Write the entry
 
@@ -28,6 +28,7 @@ Create `projects/<slug>.md` — kebab-case slug; it becomes the URL `/p/<slug>/`
 
 - Frontmatter: same fields, order, and formats as `_sample.md`. `date: YYYY-MM` is when the project happened, not when its repo was created.
 - Tags: short, lowercase, kebab-case (`open-source`, not `open source`). Reuse tags from existing entries where they fit.
+- Credits: everyone else involved goes in `credits:` (name, optional role and url) — the entry should appreciate collaborators, not just the author. `role:` stays the author's own role. Credits live in frontmatter, not the body.
 - Body: 1–3 short paragraphs in the voice below.
 
 ### Voice
