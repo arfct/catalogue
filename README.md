@@ -49,7 +49,7 @@ stack: github-pages
 ```
 
 ### 4. Add your first project
-Create `_entries/my-project.md`:
+Create `projects/my-project.md`:
 ```markdown
 ---
 title: My Project
@@ -145,7 +145,7 @@ redundancy or while migrating between stacks.
 
 ## Entry format
 
-Each project is a Markdown file in `_entries/` with YAML frontmatter:
+Each project is a Markdown file in `projects/` with YAML frontmatter:
 
 ```markdown
 ---
@@ -160,40 +160,36 @@ media:                              # required
   - src: project/detail.jpg         # caption and alt are optional
 client: Client Name                 # optional
 role: Design, Art Direction         # optional
+url: https://my-project.example     # optional — shown as a link on the page
 ---
 
 Write your project description here in plain Markdown. As long or short as
 you like. This becomes the body of the detail page.
 ```
 
-The filename stem becomes the URL slug: `_entries/sfmoma-poster.md` →
-`/entry/sfmoma-poster/`.
+The filename stem becomes the URL slug: `projects/sfmoma-poster.md` →
+`/p/sfmoma-poster/`. Files starting with `_` (like `projects/_sample.md`, the
+reference entry) are excluded from the published site.
 
 ---
 
 ## Updating your work
 
-- **Edit a project:** change its `_entries/` file and commit.
+- **Edit a project:** change its `projects/` file and commit.
 - **Replace an image:** commit a new file with the same name. GitHub rebuilds
   automatically. On Cloudflare, the R2 sync runs and updates the URL.
-- **Add a project:** add a new `_entries/` file and images.
+- **Add a project:** add a new `projects/` file and images.
 
 ---
 
-## Working locally with large files
+## Working locally
 
 ```bash
 git clone https://github.com/YOU/catalogue.git
 cd catalogue
 npm install
-
-cp .env.example .env    # add your R2 keys (Cloudflare stack only)
-
-npm run sync            # upload media-local/ to R2, fill in entries
 npm run dev             # preview at localhost:8080
 ```
-
-`media-local/` is gitignored — large originals stay on your machine.
 
 ---
 
@@ -218,14 +214,12 @@ URLs.
 
 ```
 catalogue.config.yml   ← your name, settings, stack choice
-_entries/              ← one .md file per project
+projects/              ← one .md file per project (_sample.md is the reference)
 media/                 ← images (committed, synced to R2 or served directly)
-media-local/           ← large media, local only, never committed
-styles/, _includes/    ← CSS and templates (don't need to touch)
+styles/                ← main.css (theme) and custom.css (your overrides)
+_includes/             ← page templates (don't need to touch)
 .github/workflows/     ← build and deploy automation
 ```
-
-See **[PLAN.md](PLAN.md)** for the full design rationale.
 
 ---
 
