@@ -1,13 +1,16 @@
 {
   "name": "catalogue",
   "version": "1.0.0",
-  "description": "Catalogue Raisonné — a template for publishing a catalog of your work",
+  "description": "Catalogue Raisonn\u00e9 \u2014 a template for publishing a catalog of your work",
   "scripts": {
-    "dev": "eleventy --serve",
-    "build": "eleventy"
+    "build:js": "node scripts/build-page-scripts.js",
+    "dev": "npm run build:js && eleventy --serve",
+    "build": "eleventy && npm run build:js",
+    "sync": "node scripts/sync-media.js"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.0",
+    "esbuild": "^0.28.1"
   }
 }

@@ -178,6 +178,20 @@ reference entry) are excluded from the published site.
 
 ---
 
+## Standalone pages
+
+Put prose pages — about, contact, a privacy policy — in `pages/` as Markdown.
+`pages/about.md` is published at `/about/`. `pages/_sample.md` documents the
+frontmatter: per-page fonts, a bundled page script, a full-viewport `bare`
+layout for a custom homepage. Pages stay out of navigation unless listed under
+`nav:` in `catalogue.config.yml`. `pages/404.njk` is the not-found page.
+
+To give the site a homepage and move the catalogue off `/`, set `catalog_path`
+(e.g. `/work/`) and `entry_path` in `catalogue.config.yml`, and add a page with
+`permalink: /`.
+
+---
+
 ## Updating your work
 
 - **Edit a project:** change its `projects/` file and commit.
@@ -220,9 +234,11 @@ URLs.
 ```
 catalogue.config.yml   ← your name, settings, stack choice
 projects/              ← one .md file per project (_sample.md is the reference)
+pages/                 ← standalone pages (_sample.md is the reference; 404.njk)
 media/                 ← images (committed, synced to R2 or served directly)
 styles/                ← main.css (theme) and custom.css (your overrides)
 _includes/             ← page templates (don't need to touch)
+scripts/               ← media sync, page-script bundling
 .github/workflows/     ← build and deploy automation
 ```
 

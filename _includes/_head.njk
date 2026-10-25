@@ -1,5 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+{% if build.commit %}<meta name="generator" content="Eleventy, {{ build.commit }}">{% endif %}
 
 {% set pageTitle = title + " — " + site.title if title else site.title %}
 {% set pageDescription = description if description else site.description %}
@@ -24,6 +25,20 @@
 <link rel="stylesheet" href="/styles/main.css">
 <link rel="stylesheet" href="/styles/custom.css">
 <style>:root { --accent: {{ site.accent_color | default("#1a1a1a") }}; }</style>
+
+{# Google Fonts, per page. A list of css2 family specs, e.g.
+   fonts: ["Alegreya:ital,wght@0,400..900;1,400..900"] #}
+{% if fonts %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+{% for family in fonts %}
+<link href="https://fonts.googleapis.com/css2?family={{ family }}&display=swap" rel="stylesheet">
+{% endfor %}
+{% endif %}
+
+{# A bundled page script, from scripts/pages/<name>.js. Bundled by esbuild
+   because browsers cannot resolve bare module specifiers like "three". #}
+{% if script %}<script type="module" src="/js/{{ script }}.js"></script>{% endif %}
 
 <!-- Prefetch same-origin pages on hover so cross-document view transitions
      land render-ready in Chrome (Safari/Arc already preload). -->

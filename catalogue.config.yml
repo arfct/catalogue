@@ -8,10 +8,22 @@ author: Your Name
 accent_color: "#1a1a1a"
 # url: https://yourname.github.io/catalogue  # required for og:image absolute URLs
 
+# Where things live. The defaults put the catalogue index at the site root and
+# each entry at /p/<slug>/. Set catalog_path to mount the catalogue elsewhere
+# (e.g. /work/) when a homepage page owns /.
+# home_path: /
+# catalog_path: /
+# entry_path: /p/
+
+# Pages linked in the header, as {label, path}. Empty means no nav. A page
+# left out of this list is unlisted: reachable by URL, never linked.
+nav: []
+
 # Stack: github-pages | cloudflare
 stack: github-pages
 
 # Only needed for the cloudflare stack:
 # cloudflare:
 #   pages_project: your-project-name
+#   r2_bucket: your-bucket-name             # used by `npm run sync`
 #   r2_media_base_url: https://media.yourdomain.com

@@ -7,9 +7,35 @@ every step.
 
 ## What this is
 
-An Eleventy static site: a browsable index of projects at `/`, a detail page
-per project at `/p/<slug>/`. Each project is one Markdown file in `projects/`
-with YAML frontmatter. No database, no CMS.
+An Eleventy static site: a browsable index of projects, a detail page per
+project, and any number of standalone pages around them. Each project is one
+Markdown file in `projects/` with YAML frontmatter. No database, no CMS.
+
+Where things live is set in `catalogue.config.yml`. The defaults put the index
+at `/` and entries at `/p/<slug>/`; a fork can mount the catalogue elsewhere
+(`catalog_path`, `entry_path`) so that a homepage page owns `/`.
+
+## Standalone pages
+
+`pages/` holds prose pages that sit alongside the catalogue — an about page, a
+contact page, a privacy policy. `pages/_sample.md` documents the format.
+Frontmatter beyond `title` and `description`:
+
+- `permalink` — defaults to `/<filename>/`.
+- `fonts` — list of Google Fonts css2 family specs to load on that page only.
+- `script` — bundles `scripts/pages/<name>.js` to `/js/<name>.js` via esbuild
+  and loads it as a module. Needed for anything importing an npm package,
+  since Eleventy does not bundle.
+- `bare: true` — skip the header, footer, and `<main>` wrapper entirely, for a
+  page that owns its whole viewport (a custom homepage).
+- `body_class` — a class on `<body>`, so page-specific CSS can be scoped.
+
+Pages never appear in navigation automatically. Add them to `nav:` in
+`catalogue.config.yml` to link them; leaving one out is how it stays unlisted.
+
+`pages/404.njk` builds to `/404.html`, which hosts serve for unmatched paths.
+Don't delete it: without it Cloudflare Pages falls back to `/index.html` and
+returns HTTP 200, turning every mistyped URL into a soft 404.
 
 ## Ground rules
 
@@ -48,7 +74,7 @@ any content change.
   rebuilds and republishes automatically. Media in `media/` is served straight
   from the repo.
 - `cloudflare` — media must be uploaded to R2 or it will 404 in production
-  (`npm run sync` if the fork has it; otherwise the R2 dashboard). Deploy the
+  (`npm run sync`, which reads `cloudflare.r2_bucket`; or the R2 dashboard). Deploy the
   site with `npx wrangler pages deploy _site --project-name <name>` after
   `npm run build`. Push-to-deploy CI for this stack is planned but not yet
   shipped — don't assume a push published anything.
