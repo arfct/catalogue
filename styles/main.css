@@ -88,6 +88,74 @@ main {
   padding: calc(var(--gap) * 2) var(--gap);
 }
 
+/* ─── Standalone pages ───────────────────────────────────────────────────── */
+/* Prose pages that sit alongside the catalogue (about, contribute, privacy).
+   Narrower than the catalogue grid because this is reading width, not layout. */
+.page {
+  max-width: 40rem;
+}
+
+.page__title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text);
+  margin-bottom: calc(var(--gap) * 1.5);
+}
+
+.page__body h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-top: calc(var(--gap) * 2);
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.page__body p,
+.page__body ul,
+.page__body ol {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.page__body p + p,
+.page__body ul,
+.page__body ol {
+  margin-top: 1rem;
+}
+
+.page__body ul,
+.page__body ol {
+  padding-left: 1.25rem;
+}
+
+.page__body li + li {
+  margin-top: 0.25rem;
+}
+
+.page__body a {
+  color: var(--accent);
+  text-underline-offset: 0.2em;
+}
+
+/* A postal address: preserve the author's line breaks, set it apart from prose. */
+.page__body .address {
+  margin-top: 1rem;
+  padding: 1rem 1.25rem;
+  border-left: 2px solid var(--border);
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.page__body .fine-print {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
 /* ─── Index hero ─────────────────────────────────────────────────────────── */
 .index-hero {
   padding: calc(var(--gap) * 3) 0 calc(var(--gap) * 2.5);

@@ -1,0 +1,20 @@
+---
+title: Not found
+description: That page doesn't exist.
+permalink: /404.html
+---
+{#
+  Cloudflare Pages (and Netlify, and GitHub Pages) serve /404.html for
+  unmatched paths. Without this file, Cloudflare Pages falls back to
+  /index.html and returns HTTP 200 — so every mistyped URL silently renders
+  the homepage as a "soft 404", which search engines index and users find
+  confusing. This file is what makes a missing page actually return 404.
+#}
+<p>
+  That page doesn't exist — it may have moved, or the link may be wrong.
+</p>
+
+<p>
+  Try the <a href="{{ site.home_path }}">homepage</a> or the
+  <a href="{{ site.catalog_path }}">catalogue</a>.
+</p>

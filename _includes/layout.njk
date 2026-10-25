@@ -3,21 +3,35 @@
 <head>
   {% include "_head.njk" %}
 </head>
-<body>
-  {% if title %}
-    <a href="/" class="entry-back">&larr;</a>
+<body{% if body_class %} class="{{ body_class }}"{% endif %}>
+  {% if bare %}
+    {# A page that owns its whole viewport: no header, no footer, no <main>
+       wrapper (which would constrain width and add padding). For landing
+       pages with full-bleed canvases or custom layouts. #}
+    {{ content | safe }}
+  {% else %}
+  {% if entry %}
+    <a href="{{ site.catalog_path }}" class="entry-back">&larr;</a>
   {% else %}
     <header class="site-header">
-      <a href="/" class="site-title">{{ site.title }}</a>
+      <a href="{{ site.home_path }}" class="site-title">{{ site.title }}</a>
+      {% if site.nav.length %}
+        <nav class="site-nav">
+          {% for item in site.nav %}
+            <a href="{{ item.path }}">{{ item.label }}</a>
+          {% endfor %}
+        </nav>
+      {% endif %}
     </header>
   {% endif %}
 
   <main>{{ content | safe }}</main>
 
-  {% if not title %}
+  {% if not entry %}
     <footer class="site-footer">
       <p>{{ site.author }}</p>
     </footer>
+  {% endif %}
   {% endif %}
 </body>
 </html>
