@@ -1,0 +1,21 @@
+---
+pagination:
+  data: collections.formerSlugs
+  size: 1
+  alias: redirect
+permalink: "{{ site.entry_path }}{{ redirect.from }}/"
+eleventyExcludeFromCollections: true
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ redirect.title }} — {{ site.title }}</title>
+  <link rel="canonical" href="{{ redirect.to }}">
+  <meta http-equiv="refresh" content="0; url={{ redirect.to }}">
+  <meta name="robots" content="noindex">
+</head>
+<body>
+  <p><a href="{{ redirect.to }}">{{ redirect.title }}</a> has moved.</p>
+</body>
+</html>
