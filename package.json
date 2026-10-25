@@ -10,7 +10,7 @@
     "check": "node scripts/check-entries.js",
     "import": "node scripts/import-entries.js",
     "seed": "node scripts/seed-entry.js",
-    "test": "node --test test/"
+    "test": "node --test test/*.test.js"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",
