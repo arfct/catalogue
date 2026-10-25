@@ -6,7 +6,11 @@
     "build:js": "node scripts/build-page-scripts.js",
     "dev": "npm run build:js && eleventy --serve",
     "build": "eleventy && npm run build:js",
-    "sync": "node scripts/sync-media.js"
+    "sync": "node scripts/sync-media.js",
+    "check": "node scripts/check-entries.js",
+    "import": "node scripts/import-entries.js",
+    "seed": "node scripts/seed-entry.js",
+    "test": "node --test test/"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0",

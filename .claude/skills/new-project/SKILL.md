@@ -5,7 +5,12 @@ description: Use when the user wants to add a project or entry to this catalogue
 
 # New Project Entry
 
-Create `projects/<slug>.md` plus its media, matching the site's existing conventions exactly.
+Write an entry plus its media, matching the site's existing conventions exactly.
+
+**Where it goes:**
+
+- **A project with its own repo the user controls**: write the entry into that repo's `.artifact/` folder (`source_dir` in `catalogue.config.yml`) as `<slug>.md` with bare image names, its images and an optional `icon.png` beside it, plus a two-line `README.md` saying the folder is a catalogue entry, not build output. Check it with `npm run check -- --dir <repo>/.artifact`. Then add the repo to `sources:` and run `npm run import`. The entry is committed in that repo; the import is committed here.
+- **Anything else** (no repo, or a repo the user doesn't control): `projects/<slug>.md` plus `media/<slug>/`, as below.
 
 ## Ground truth
 
@@ -27,6 +32,9 @@ Facts you infer (especially the date, role, and tags) are guesses — confirm th
 Create `projects/<slug>.md` — kebab-case slug; it becomes the URL `/p/<slug>/`.
 
 - Frontmatter: same fields, order, and formats as `_sample.md`. `date: YYYY-MM` is when the project happened, not when its repo was created.
+- `url` is the project's own page. Every other public way to get it (store pages, a public beta, a public repo) goes in `links`, with the keys listed in the README.
+- `category`, if the site has more than one in `catalogue.config.yml`.
+- Anything you inferred and couldn't confirm goes in `unconfirmed` (e.g. `[date]`), so the checker keeps flagging it.
 - Tags: short, lowercase, kebab-case (`open-source`, not `open source`). Reuse tags from existing entries where they fit.
 - Credits: everyone else involved goes in `credits:` (name, optional role and url) — the entry should appreciate collaborators, not just the author. `role:` stays the author's own role. Credits live in frontmatter, not the body.
 - Body: 1–3 short paragraphs in the voice below.
@@ -56,9 +64,11 @@ Stack determines where media must go (`catalogue.config.yml`):
 - `github-pages` — files in `media/` are served directly; adding them is enough.
 - `cloudflare` — media is served from R2, not the repo. After adding files to `media/`, run `npm run sync` or the images will 404 in production.
 
+An app icon, if the project has one, is the square unmasked art (1024px), never a `media` item: `icon:` in `projects/`, or `icon.png` by name in `.artifact/`.
+
 ## 4. Verify
 
-Run the dev server and check both pages render correctly: the new card on `/` and the detail page at `/p/<slug>/`. Show the user what it looks like.
+Run `npm run check`, then the dev server and check both pages render correctly: the new card on `/` and the detail page at `/p/<slug>/`. Show the user what it looks like.
 
 ## 5. Hand off
 

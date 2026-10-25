@@ -145,27 +145,34 @@ redundancy or while migrating between stacks.
 
 ## Entry format
 
-Each project is a Markdown file in `projects/` with YAML frontmatter:
+Each project is a Markdown file in `projects/` with YAML frontmatter.
+`projects/_sample.md` is the reference, with every field:
 
 ```markdown
 ---
 title: Project Title                 # required
-date: 2024-06                        # required (YYYY or YYYY-MM)
-tags: [print, identity]             # optional
-media_type: image                   # optional: image | video | audio
-media:                              # required
-  - src: project/hero.jpg           # relative path or absolute URL
+date: 2024-06                        # required: when it happened (YYYY-MM or YYYY)
+category: project                    # one of `categories:` in the config; optional with only one
+tags: [print, identity]              # optional; checked against tags.yml if the site has one
+url: https://my-project.example      # optional: the project's own page, shown as Link
+links:                               # optional: every public way to get it, shown as "Get it"
+  app_store: https://apps.apple.com/app/id000000000
+  source: https://github.com/you/project
+media_type: image                    # optional: image | video | audio
+media:                               # required
+  - src: project/hero.jpg            # relative to media/, or an absolute URL
     caption: Optional caption
-    alt: Optional alt text
-  - src: project/detail.jpg         # caption and alt are optional
-client: Client Name                 # optional
-role: Design, Art Direction         # optional — your role
-url: https://my-project.example     # optional — shown as a link on the page
-credits:                            # optional — everyone else involved
-  - name: Jane Doe                  # required
-    role: Photography               # optional — what they contributed
-    url: https://janedoe.com        # optional — links their name
-
+    alt: Alt text                    # describe the image; the checker warns without it
+icon: project/icon.png               # optional: square, unmasked app icon
+icon_shape: squircle                 # optional: squircle (default) | circle | none
+client: Client Name                  # optional
+role: Design, Art Direction          # optional: your role
+credits:                             # optional: everyone else involved
+  - name: Jane Doe                   # required
+    role: Photography                # optional: what they contributed
+    url: https://janedoe.com         # optional: links their name
+formerly: [old-slug]                 # optional: earlier slugs, each redirected here
+unconfirmed: [date]                  # optional: fields that are still guesses
 ---
 
 Write your project description here in plain Markdown. As long or short as
@@ -175,6 +182,61 @@ you like. This becomes the body of the detail page.
 The filename stem becomes the URL slug: `projects/sfmoma-poster.md` →
 `/p/sfmoma-poster/`. Files starting with `_` (like `projects/_sample.md`, the
 reference entry) are excluded from the published site.
+
+**`links` keys:** `app` (a web app separate from the project's page),
+`app_store`, `mac_app_store`, `testflight`, `play`, `play_testing`,
+`chrome_web_store`, `source`. Each is checked against the site it should point
+at (`app_store` must be `apps.apple.com`, and so on). Add your own under
+`link_kinds:` in `catalogue.config.yml`.
+
+**Icons** are shown beside the title on the entry and on its index card, never
+as one of the images. Supply the plain square art (1024×1024 is ideal), with no
+rounded corners: the site applies the shape, so baked-in corners would be
+rounded twice.
+
+**Categories** group the index. Set `categories:` in the config (for example
+work, writing, tools) and give each entry a `category`. With one category, the
+default, the index is a single grid with no headings.
+
+**Checking entries:** `npm run check` reports missing fields, bad dates, links
+pointing at the wrong site, missing images, oversized files and non-square
+icons. `npm run check -- --remote` also fetches every link and image, and
+`--report` prints a table. Guesses listed in `unconfirmed` show up as warnings
+until you remove them.
+
+---
+
+## Entries from other repos
+
+A project can keep its entry in its own repo, so the description changes in
+the same commit as the work it describes. The repo holds a hidden folder at
+its root, `.artifact/` (an artifact: the record of one made thing):
+
+```
+.artifact/
+  README.md          says what the folder is (it isn't build output)
+  <slug>.md          the entry, in the format above, with bare image names
+  icon.png           optional: the app icon, found by name
+  hero.png, …        its images
+```
+
+List the repo under `sources:` in `catalogue.config.yml` and run `npm run
+import`. It reads each folder from the repo's default branch through the
+GitHub CLI (`gh`), so private repos work too. It writes `projects/<slug>.md`
+and `media/<slug>/`, and prints what changed. Commit the result. Imported
+entries carry `source:` and `source_commit:`. Edit them in their repo, not
+here: the next import overwrites them. A hand-written entry is never replaced
+unless you pass `--adopt`.
+
+- `npm run import -- --repo you/project` imports one source.
+- `npm run import -- --from ../project/.artifact --repo you/project` imports a
+  local folder before it's pushed.
+- `npm run check -- --dir ../project/.artifact` checks a folder in place.
+- `npm run seed -- <slug> ../project` goes the other way: it moves an existing
+  entry and its images into the repo's `.artifact/` folder, ready for a commit
+  there.
+
+Set `source_dir:` to use a different folder name.
 
 ---
 
@@ -234,11 +296,13 @@ URLs.
 ```
 catalogue.config.yml   ← your name, settings, stack choice
 projects/              ← one .md file per project (_sample.md is the reference)
+tags.yml               ← optional: the tags entries may use
 pages/                 ← standalone pages (_sample.md is the reference; 404.njk)
 media/                 ← images (committed, synced to R2 or served directly)
 styles/                ← main.css (theme) and custom.css (your overrides)
 _includes/             ← page templates (don't need to touch)
-scripts/               ← media sync, page-script bundling
+scripts/               ← check, import, seed, media sync, page-script bundling
+test/                  ← tests for the scripts (npm test)
 .github/workflows/     ← build and deploy automation
 ```
 

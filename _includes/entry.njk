@@ -4,7 +4,12 @@ layout: layout.njk
 <article class="entry">
 
   <div class="entry__left">
-    <h1 class="entry__title">{{ title }}</h1>
+    <header class="entry__header">
+      {% if icon %}
+        <img class="entry__icon app-icon app-icon--{{ icon_shape or 'squircle' }}" src="{{ icon | mediaUrl }}" alt="" width="96" height="96">
+      {% endif %}
+      <h1 class="entry__title">{{ title }}</h1>
+    </header>
 
     {% if content %}
       <div class="entry__body">{{ content | safe }}</div>
@@ -12,7 +17,7 @@ layout: layout.njk
 
     <dl class="entry__meta">
       <dt>Date</dt>
-      <dd>{{ date | truncate(7, true, "") }}</dd>
+      <dd>{{ date | entryDate }}</dd>
       {% if client %}
         <dt>Client</dt>
         <dd>{{ client }}</dd>
@@ -37,6 +42,17 @@ layout: layout.njk
       {% if url %}
         <dt>Link</dt>
         <dd><a href="{{ url }}">{{ url | replace("https://", "") | replace("http://", "") }}</a></dd>
+      {% endif %}
+      {% set getIt = links | entryLinks %}
+      {% if getIt.length %}
+        <dt>Get it</dt>
+        <dd>
+          <ul class="link-list">
+            {% for link in getIt %}
+              <li><a href="{{ link.url }}">{{ link.label }}</a></li>
+            {% endfor %}
+          </ul>
+        </dd>
       {% endif %}
       {% if tags %}
         <dt>Tags</dt>

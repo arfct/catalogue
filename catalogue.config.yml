@@ -19,6 +19,25 @@ accent_color: "#1a1a1a"
 # left out of this list is unlisted: reachable by URL, never linked.
 nav: []
 
+# Index groups, in order. Each entry's `category` names one; with a single
+# group (the default) entries don't need the field and the index has no
+# headings. Ids or {id, label}:
+# categories:
+#   - { id: work, label: Work }
+#   - { id: writing, label: Writing }
+
+# Entries that live in other repos. Each repo keeps its entry in a hidden
+# folder at its root (source_dir) and `npm run import` copies it here.
+# source_dir: .artifact
+sources: []
+#   - repo: you/your-project
+
+# Extra `links` keys beyond the built-in ones (app, app_store, mac_app_store,
+# testflight, play, play_testing, chrome_web_store, source). hosts limits
+# where the link may point; omit it to allow any https URL.
+# link_kinds:
+#   itch: { label: itch.io, hosts: [itch.io] }
+
 # Stack: github-pages | cloudflare
 stack: github-pages
 

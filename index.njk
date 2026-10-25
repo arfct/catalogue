@@ -9,30 +9,39 @@ permalink: "{{ site.catalog_path }}"
   {% endif %}
 </div>
 
-<div class="entry-grid">
-  {% for entry in collections.entries | reverse %}
-    {% set firstMedia = entry.data.media[0] %}
-    <a href="{{ entry.url }}" class="entry-card">
-      {% if firstMedia %}
-        <div class="entry-card__thumb" style="view-transition-name: entry-{{ entry.fileSlug }}">
-          <img
-            src="{{ firstMedia.src | mediaUrl }}"
-            alt="{{ firstMedia.alt or entry.data.title }}"
-            loading="lazy"
-          >
-        </div>
-      {% endif %}
-      <div class="entry-card__meta">
-        <h2 class="entry-card__title">{{ entry.data.title }}</h2>
-        <p class="entry-card__date">{{ entry.data.date | truncate(7, true, "") }}</p>
-        {% if entry.data.tags %}
-          <ul class="entry-card__tags">
-            {% for tag in entry.data.tags %}
-              <li>{{ tag }}</li>
-            {% endfor %}
-          </ul>
+{% set grouped = collections.entryGroups.length > 1 %}
+{% for group in collections.entryGroups %}
+<section class="entry-group entry-group--{{ group.id }}">
+  {% if grouped %}<h2 class="entry-group__label">{{ group.label }}</h2>{% endif %}
+  <div class="entry-grid">
+    {% for entry in group.entries %}
+      {% set firstMedia = entry.data.media[0] %}
+      <a href="{{ entry.url }}" class="entry-card">
+        {% if firstMedia %}
+          <div class="entry-card__thumb" style="view-transition-name: entry-{{ entry.fileSlug }}">
+            <img
+              src="{{ firstMedia.src | mediaUrl }}"
+              alt="{{ firstMedia.alt or entry.data.title }}"
+              loading="lazy"
+            >
+          </div>
         {% endif %}
-      </div>
-    </a>
-  {% endfor %}
-</div>
+        <div class="entry-card__meta">
+          <h2 class="entry-card__title">
+            {% if entry.data.icon %}<img class="entry-card__icon app-icon app-icon--{{ entry.data.icon_shape or 'squircle' }}" src="{{ entry.data.icon | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% endif %}
+            {{ entry.data.title }}
+          </h2>
+          <p class="entry-card__date">{{ entry.data.date | entryDate }}</p>
+          {% if entry.data.tags %}
+            <ul class="entry-card__tags">
+              {% for tag in entry.data.tags %}
+                <li>{{ tag }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}

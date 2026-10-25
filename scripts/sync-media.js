@@ -23,7 +23,8 @@ function walk(dir) {
   });
 }
 
-const files = walk("media");
+// Underscore files are placeholders and drafts; they never go to the bucket.
+const files = walk("media").filter((file) => !path.basename(file).startsWith("_") && !file.includes("/_"));
 
 console.log(`Syncing ${files.length} files to r2://${bucket}`);
 
