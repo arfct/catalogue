@@ -13,8 +13,7 @@ media:
   - src: entry-page.png
     caption: Subpixel's entry in Artifact's own catalogue, imported from Subpixel's repo
     alt: A catalogue page with the Subpixel icon and title, three paragraphs of text, and two pixel-art screenshots of island and plaza worlds
-role: Design, Engineering
-unconfirmed: [date, role]
+unconfirmed: [date]
 ---
 
 One Markdown file per project: a title, a date, its images, a few paragraphs. Eleventy turns the folder of them into an index and a page for each entry, published to GitHub Pages or to Cloudflare with the images in R2. Any page prints to PDF.
