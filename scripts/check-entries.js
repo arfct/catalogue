@@ -215,7 +215,8 @@ function warnLoneTags(results) {
   const uses = new Map();
   for (const r of results) for (const tag of r.tags) uses.set(tag, [...(uses.get(tag) || []), r]);
   for (const [tag, users] of uses) {
-    const group = vocabulary.get(tag)?.group;
+    if (!vocabulary.has(tag)) continue; // already an error
+    const group = vocabulary.get(tag).group;
     const site = !baseTags.has(tag);
     if (users.length === 1 && (group === "subject" || site)) {
       users[0].warnings.push(`tag "${tag}" is used by no other entry; subject and site tags should group two or more`);
