@@ -73,13 +73,17 @@ module.exports = function (eleventyConfig) {
     return undefined;
   });
 
-  // How an entry's date reads: as written, YYYY-MM or YYYY.
   // Credits by GitHub login resolve against contributors.yml (see schema.js).
   const people = schema.contributors() || {};
   eleventyConfig.addFilter("resolveCredits", (credits) =>
     (credits || []).map((item) => schema.resolveCredit(item, people))
   );
 
+  // A tag shows as its label from tags.base.yml or tags.yml.
+  const tags = schema.tagVocabulary();
+  eleventyConfig.addFilter("tagLabel", (tag) => tags.get(String(tag))?.label || tag);
+
+  // How an entry's date reads: as written, YYYY-MM or YYYY.
   eleventyConfig.addFilter("entryDate", (value) =>
     value instanceof Date ? value.toISOString().slice(0, 7) : String(value ?? "")
   );

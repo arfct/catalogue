@@ -4,8 +4,6 @@ date: 2026-06
 category: tool
 tags:
   - web
-  - tools
-  - open-source
 url: https://arfct.github.io/catalogue/
 links:
   source: https://github.com/arfct/catalogue

@@ -24,6 +24,7 @@ const config = schema.loadConfig();
 const kinds = schema.linkKinds(config);
 const categoryIds = schema.categories(config).map((c) => c.id);
 const vocabulary = schema.tagVocabulary();
+const baseTags = schema.tagVocabulary({ site: null });
 const people = schema.contributors();
 const sourceFolder = option("--dir");
 const remote = flag("--remote");
@@ -116,7 +117,7 @@ async function checkEntry(file) {
   const tags = Array.isArray(data.tags) ? data.tags.map(String) : [];
   for (const tag of tags) {
     if (tag !== tag.toLowerCase()) warnings.push(`tag "${tag}" isn't lowercase`);
-    if (vocabulary && !vocabulary.has(tag)) errors.push(`tag "${tag}" isn't in tags.yml`);
+    if (!vocabulary.has(tag)) errors.push(`tag "${tag}" isn't in tags.base.yml or tags.yml`);
   }
 
   if (data.url !== undefined && !/^https:\/\//.test(data.url)) errors.push(`url "${data.url}" isn't https://`);
@@ -204,12 +205,28 @@ async function checkEntry(file) {
     }
   }
 
-  return { slug, errors, warnings };
+  return { slug, errors, warnings, tags };
+}
+
+// A subject tag, or a site's own tag, should group at least two entries.
+// Only meaningful across the whole site, so skipped for a single --dir.
+function warnLoneTags(results) {
+  if (sourceFolder) return;
+  const uses = new Map();
+  for (const r of results) for (const tag of r.tags) uses.set(tag, [...(uses.get(tag) || []), r]);
+  for (const [tag, users] of uses) {
+    const group = vocabulary.get(tag)?.group;
+    const site = !baseTags.has(tag);
+    if (users.length === 1 && (group === "subject" || site)) {
+      users[0].warnings.push(`tag "${tag}" is used by no other entry; subject and site tags should group two or more`);
+    }
+  }
 }
 
 async function main() {
   const results = [];
   for (const file of entryFiles()) results.push(await checkEntry(file));
+  warnLoneTags(results);
 
   if (flag("--report")) {
     console.log("| Entry | Errors | Warnings |\n|---|---|---|");

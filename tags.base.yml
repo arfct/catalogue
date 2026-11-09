@@ -1,0 +1,36 @@
+# The base tags every catalogue can use. This file belongs to the template and
+# changes with it: don't edit it in a site. Add a site's own tags in tags.yml,
+# in the same shape, by the rules in README.md under "Tags".
+#
+# Each group maps a tag (lowercase, hyphenated) to the label pages show.
+
+# Where it runs or what it's made in. Tag every platform an entry ships on.
+platform:
+  web: Web
+  ios: iOS
+  ipados: iPadOS
+  macos: macOS
+  watchos: watchOS
+  visionos: visionOS
+  android: Android
+  wear-os: Wear OS
+  pebble: Pebble
+  browser-extension: Browser extension
+  hardware: Hardware
+  print: Print
+
+# What kind of thing it is, where the category doesn't already say it.
+form:
+  game: Game
+  widget: Widget
+  watchface: Watch face
+
+# What it's about. A subject tag earns its place by grouping two or more
+# entries; the checker warns about one used only once.
+subject:
+  design: Design
+  identity: Identity
+  multiplayer: Multiplayer
+  security: Security
+  time: Time
+  writing: Writing
