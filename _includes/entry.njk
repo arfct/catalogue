@@ -30,7 +30,7 @@ layout: layout.njk
         <dt>With</dt>
         <dd>
           <ul class="credit-list">
-            {% for person in credits %}
+            {% for person in credits | resolveCredits %}
               <li>
                 {% if person.url %}<a href="{{ person.url }}">{{ person.name }}</a>{% else %}{{ person.name }}{% endif %}
                 {%- if person.role %} — {{ person.role }}{% endif %}

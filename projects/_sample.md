@@ -18,12 +18,12 @@ icon: _sample/icon.png        # optional: an unmasked square app icon; the site 
 icon_shape: squircle          # optional: squircle (default) | circle | none
 client: Example Client
 role: Art Direction, Design
-credits:                      # everyone else involved — name required, rest optional
-  - name: Jane Doe
-    role: Photography
-    url: https://example.com
-  - name: Sam Lee
+credits:                      # everyone else involved, by GitHub login (contributors.yml has names and links)
+  - janedoe
+  - github: samlee
     role: Sound design
+  - name: Ada Lovelace          # someone without GitHub: a name, optional role and url
+    role: Photography
 formerly: [old-sample]        # earlier slugs; each gets a redirect to this page
 unconfirmed: [date]           # fields that are still guesses; nothing renders, the checker warns
 ---

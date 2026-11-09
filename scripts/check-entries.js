@@ -24,6 +24,7 @@ const config = schema.loadConfig();
 const kinds = schema.linkKinds(config);
 const categoryIds = schema.categories(config).map((c) => c.id);
 const vocabulary = schema.tagVocabulary();
+const people = schema.contributors();
 const sourceFolder = option("--dir");
 const remote = flag("--remote");
 const mediaBase =
@@ -171,6 +172,16 @@ async function checkEntry(file) {
       if (size.alpha && (data.icon_shape || "squircle") !== "none") {
         warnings.push("icon has an alpha channel; the site masks it, so supply opaque, unmasked art");
       }
+    }
+  }
+
+  for (const [i, item] of (data.credits || []).entries()) {
+    const login = typeof item === "string" ? item : item?.github;
+    if (typeof item === "string" || login) {
+      if (!schema.GITHUB_LOGIN.test(String(login))) errors.push(`credit ${i + 1} "${login}" isn't a GitHub login`);
+      else if (people && !people[login]) warnings.push(`credit "${login}" isn't in contributors.yml`);
+    } else if (!item?.name) {
+      errors.push(`credit ${i + 1} has neither a GitHub login nor a name`);
     }
   }
 

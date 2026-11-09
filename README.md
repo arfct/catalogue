@@ -168,9 +168,11 @@ icon_shape: squircle                 # optional: squircle (default) | circle | n
 client: Client Name                  # optional
 role: Design, Art Direction          # optional: your role
 credits:                             # optional: everyone else involved
-  - name: Jane Doe                   # required
-    role: Photography                # optional: what they contributed
-    url: https://janedoe.com         # optional: links their name
+  - janedoe                          # a GitHub login, resolved from contributors.yml
+  - github: samlee                   # or a login with a role
+    role: Sound design
+  - name: Ada Lovelace               # or, for someone without GitHub, a name
+    url: https://example.com         # optional: links their name
 formerly: [old-slug]                 # optional: earlier slugs, each redirected here
 unconfirmed: [date]                  # optional: fields that are still guesses
 ---
@@ -193,6 +195,13 @@ at (`app_store` must be `apps.apple.com`, and so on). Add your own under
 as one of the images. Supply the plain square art (1024×1024 is ideal), with no
 rounded corners: the site applies the shape, so baked-in corners would be
 rounded twice.
+
+**Credits** name people by GitHub login (`credits: [janedoe]`). An optional
+`contributors.yml` at the repo root maps each login to a display name, a link
+and anything else you keep about them; the build fills those in, and a login
+it doesn't list shows as itself, linked to its GitHub profile. The checker
+warns about logins missing from `contributors.yml` when the file exists.
+Someone without a GitHub account is an object with a `name`.
 
 **Categories** group the index. Set `categories:` in the config (for example
 work, writing, tools) and give each entry a `category`. With one category, the
@@ -297,6 +306,7 @@ URLs.
 catalogue.config.yml   ← your name, settings, stack choice
 projects/              ← one .md file per project (_sample.md is the reference)
 tags.yml               ← optional: the tags entries may use
+contributors.yml       ← optional: names and links for credited GitHub logins
 pages/                 ← standalone pages (_sample.md is the reference; 404.njk)
 media/                 ← images (committed, synced to R2 or served directly)
 styles/                ← main.css (theme) and custom.css (your overrides)

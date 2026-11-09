@@ -56,6 +56,31 @@ function tagVocabulary(file = "tags.yml") {
   return new Set(tags.map(String));
 }
 
+// `contributors.yml` is optional: a map of GitHub login to {name, url, ...}.
+// Entries credit people by login; the build fills in the rest from here.
+function contributors(file = "contributors.yml") {
+  if (!fs.existsSync(file)) return null;
+  return yaml.load(fs.readFileSync(file, "utf8")) || {};
+}
+
+const GITHUB_LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9]|-(?=[A-Za-z0-9])){0,38}$/;
+
+// A credit is a GitHub login ("dps") or an object ({name, role, url} or
+// {github, role}). Resolves either to {name, url, role, github} for display:
+// contributors.yml supplies the name and link, and a login missing there
+// shows as itself, linked to its GitHub profile.
+function resolveCredit(item, people = {}) {
+  const entry = typeof item === "string" ? { github: item } : { ...(item || {}) };
+  if (!entry.github) return entry;
+  const known = (people || {})[entry.github] || {};
+  return {
+    ...known,
+    ...entry,
+    name: entry.name || known.name || entry.github,
+    url: entry.url || known.url || `https://github.com/${entry.github}`,
+  };
+}
+
 function sourceDir(config) {
   return (config.source_dir || ".artifact").replace(/\/$/, "");
 }
@@ -114,6 +139,9 @@ module.exports = {
   linkKinds,
   categories,
   tagVocabulary,
+  contributors,
+  GITHUB_LOGIN,
+  resolveCredit,
   sourceDir,
   parseEntry,
   formatEntry,

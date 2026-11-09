@@ -74,6 +74,12 @@ module.exports = function (eleventyConfig) {
   });
 
   // How an entry's date reads: as written, YYYY-MM or YYYY.
+  // Credits by GitHub login resolve against contributors.yml (see schema.js).
+  const people = schema.contributors() || {};
+  eleventyConfig.addFilter("resolveCredits", (credits) =>
+    (credits || []).map((item) => schema.resolveCredit(item, people))
+  );
+
   eleventyConfig.addFilter("entryDate", (value) =>
     value instanceof Date ? value.toISOString().slice(0, 7) : String(value ?? "")
   );
