@@ -19,6 +19,12 @@ accent_color: "#1a1a1a"
 #                             # from the icon and the title
 #   image_alt: Your Name's catalogue
 #   post_layout: true         # iMessage's post layout (description, icon beside image)
+#   fonts:                    # for the composed X cards: font files or package paths
+#     title: "@fontsource/inter/files/inter-latin-600-normal.woff"
+#     text: "@fontsource/inter/files/inter-latin-400-normal.woff"
+#     label: "@fontsource/inter/files/inter-latin-500-normal.woff"
+#   colors: { background: "#ffffff", text: "#1a1a1a", muted: "#767676", panel: "#f2f2f2" }
+# wordmark: img/wordmark.svg  # the site's wordmark, signing the X cards (else the title)
 
 # Where things live. The defaults put the catalogue index at the site root and
 # each entry at /p/<slug>/. Set catalog_path to mount the catalogue elsewhere

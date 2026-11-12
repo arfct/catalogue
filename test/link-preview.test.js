@@ -75,7 +75,7 @@ async function images(dir, ogImage) {
 }
 
 function eleventy(dir) {
-  const out = path.join(dir, "_site");
+  const out = path.join(dir, "out"); // not the configured _site, so a CLI --output is honoured
   const result = spawnSync(process.execPath, [path.join(repo, "node_modules", "@11ty", "eleventy", "cmd.cjs"), `--output=${out}`], { cwd: dir, encoding: "utf8" });
   assert.strictEqual(result.status, 0, result.stderr + result.stdout);
   return out;

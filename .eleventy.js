@@ -165,8 +165,9 @@ module.exports = function (eleventyConfig) {
     };
   });
 
-  eleventyConfig.on("eleventy.after", async ({ dir }) => {
-    await linkPreview.renderAll(dir.output, { log: (msg) => console.warn(`[catalogue] ${msg}`) });
+  // `directories` carries a CLI --output; `dir` only the configured default.
+  eleventyConfig.on("eleventy.after", async ({ dir, directories }) => {
+    await linkPreview.renderAll(directories?.output || dir.output, { log: (msg) => console.warn(`[catalogue] ${msg}`) });
   });
 
   eleventyConfig.addCollection("entries", (api) => {

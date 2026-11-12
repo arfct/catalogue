@@ -15,7 +15,13 @@ media:
     caption: Detail of the typographic system
     alt: Close-up of a letterform grid
 icon: _sample/icon.png        # optional: an unmasked square app icon; the site rounds it
+icon_macos: _sample/icon-macos.png  # optional: a macOS-style icon (transparent 1024, shape and shadow drawn);
+                              #   shown as is wherever the icon appears, never masked
 icon_shape: squircle          # optional: squircle (default) | circle | none
+wordmark: _sample/wordmark.svg  # optional: set in place of the title on the card X shows
+summary: A one-line description for link previews.  # optional: else the body's first sentence(s)
+og_image: _sample/card.png    # optional: the entry's own 1200×630 card for X (PNG or JPEG, under 600 KB);
+                              #   without it the build composes one from the fields above
 client: Example Client
 role: Art Direction, Design
 credits:                      # everyone else involved, by GitHub login (contributors.yml has names and links)

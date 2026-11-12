@@ -164,7 +164,11 @@ media:                               # required
     caption: Optional caption
     alt: Alt text                    # describe the image; the checker warns without it
 icon: project/icon.png               # optional: square, unmasked app icon
+icon_macos: project/icon-macos.png   # optional: macOS-style icon, shown unmasked
 icon_shape: squircle                 # optional: squircle (default) | circle | none
+wordmark: project/wordmark.svg       # optional: replaces the title on the X card
+summary: One line for link previews  # optional: else the body's first sentence(s)
+og_image: project/card.png           # optional: the entry's own 1200×630 X card
 client: Client Name                  # optional
 role: Design, Art Direction          # optional: your role
 credits:                             # optional: everyone else involved
@@ -192,9 +196,19 @@ at (`app_store` must be `apps.apple.com`, and so on). Add your own under
 `link_kinds:` in `catalogue.config.yml`.
 
 **Icons** are shown beside the title on the entry and on its index card, never
-as one of the images. Supply the plain square art (1024×1024 is ideal), with no
-rounded corners: the site applies the shape, so baked-in corners would be
-rounded twice.
+as one of the images. There are two kinds, and either alone is enough:
+
+- `icon` (`icon.png` or `icon.svg` in `.artifact/`): the plain square art
+  (1024×1024 is ideal), opaque, with no rounded corners. The site applies the
+  shape (`icon_shape`), so baked-in corners would be rounded twice.
+- `icon_macos` (`icon-macos.png`): an Apple-style macOS icon, 1024×1024 on a
+  transparent background with the shape, margin and shadow already drawn (the
+  macOS icon grid). It is shown as is and never masked.
+
+With both, the site shows `icon_macos` wherever the icon is displayed and keeps
+`icon` for whatever needs to mask or crop it (the apple-touch-icon, which iOS
+masks itself). The checker holds `icon_macos` to a square of 1024 (512 at
+least) with transparent corners.
 
 **Credits** name people by GitHub login (`credits: [janedoe]`). An optional
 `contributors.yml` at the repo root maps each login to a display name, a link
@@ -215,6 +229,55 @@ until you remove them.
 
 ---
 
+## Link previews
+
+Every page carries the tags a pasted link turns into a card with (iMessage,
+Slack, X, Discord, WhatsApp, Telegram, LinkedIn, Facebook), following
+[arfct/link-previews](https://github.com/arfct/link-previews). They need `url:`
+in `catalogue.config.yml`, since crawlers want absolute URLs.
+
+| Tag | Entry | Index and pages |
+|---|---|---|
+| `og:title` | the entry's title | the page title, else the site title |
+| `og:description`, `description` | `summary`, else the body's first sentence(s), at most 200 characters, one line | the page's `description`, else the site's |
+| `og:image` (+ `:width`, `:height`, `:type`, `:alt`) | the first image fitted to 1200×630 on `preview.background`, nothing added | the site card: `preview.image`, else the icon and title |
+| `twitter:image` | X only: the composed card, or `og_image` | none (X falls back to `og:image`) |
+| `og:url`, `rel=canonical` | the page's URL (none on the 404 page) | same |
+| `icon`, `apple-touch-icon` | 180 px from `icon`, else `icon_macos`, else the site's | the site's `icon` |
+| `theme-color` | `theme_color`, else `accent_color` | same |
+| `og:type` + an ActivityPub `alternate` | `article` and the alternate link, so iMessage shows the description and puts the icon beside the image (its post layout); `preview.post_layout: false` turns it off | same |
+
+Images are rendered at build time with sharp into `/og/`, named by a hash of
+their inputs, so a changed image gets a new URL and platforms that cache by
+image URL fetch it again. Renders are cached in `.cache/og/`. Every image is a
+JPEG under 600 KB (WhatsApp skips larger ones).
+
+**X gets its own card.** X shows a large card as the image alone, with no title
+or description beneath, so the build composes one for it from the entry: the
+category and tags line, the icon (`icon_macos` as is, else `icon` masked) beside
+the title or the entry's `wordmark`, the description, the first image, and the
+site's `wordmark` (else its title). Text is set from font files
+(`preview.fonts`, default Inter), so it renders the same everywhere. An entry's
+own `og_image` (exactly 1200×630) replaces the composed card.
+
+Only X may see it. Slack and iMessage take whichever of `og:image` and
+`twitter:image` comes first in the page, and Discord counts `twitter:image`
+among its images, so static tags can't keep the card from them. The pages carry
+it as `<meta name="catalogue:x-image">`, which no crawler reads, and
+`_worker.js` (a Cloudflare Pages worker, routed by `_routes.json` to pages
+only) renames it to `twitter:image` when the user agent is Twitterbot and not
+iMessage, whose fetcher claims Twitterbot too. On GitHub Pages there is no
+worker, and X shows `og:image`.
+
+The checker warns when an entry has no `og_image` (the composed card is in use)
+and errors when the named file is missing or isn't 1200×630; over 600 KB is a
+warning.
+
+Test a preview without a phone with link-previews' `tools/lp-render.swift`
+(iMessage), and with `curl -A <crawler user agent>` for the rest.
+
+---
+
 ## Entries from other repos
 
 A project can keep its entry in its own repo, so the description changes in
@@ -225,9 +288,17 @@ its root, `.artifact/` (an artifact: the record of one made thing):
 .artifact/
   README.md          says what the folder is (it isn't build output)
   <slug>.md          the entry, in the format above, with bare image names
-  icon.png           optional: the app icon, found by name
+  icon.png           optional: the app icon, found by name (or icon.svg)
+  icon-macos.png     optional: the macOS-style icon, found by name
+  wordmark.svg       optional: the wordmark for the X card, found by name (or .png)
+  card.png           optional: the entry's own X card, named by og_image
   hero.png, …        its images
 ```
+
+A folder holding several entries prefixes the named files with the slug:
+`<slug>.icon.png`, `<slug>.icon-macos.png`, `<slug>.wordmark.svg`. The import
+copies every one into `media/<slug>/`, and `npm run sync` uploads them to R2
+with the rest of `media/`.
 
 List the repo under `sources:` in `catalogue.config.yml` and run `npm run
 import`. It reads each folder from the repo's default branch through the
@@ -306,6 +377,7 @@ URLs.
 catalogue.config.yml   ← your name, settings, stack choice
 projects/              ← one .md file per project (_sample.md is the reference)
 tags.yml               ← optional: the tags entries may use
+_worker.js             ← Cloudflare Pages worker: X's card for Twitterbot (see Link previews)
 contributors.yml       ← optional: names and links for credited GitHub logins
 pages/                 ← standalone pages (_sample.md is the reference; 404.njk)
 media/                 ← images (committed, synced to R2 or served directly)
