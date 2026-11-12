@@ -228,7 +228,7 @@ The base tags come in three groups:
   platform an entry ships on.
 - **form:** what kind of thing it is, where the category doesn't say it
   (`game`, `widget`, `watchface`).
-- **subject:** what it's about (`time`, `security`, `multiplayer`, `design`…).
+- **subject:** what it's about (`time`, `writing`, `multiplayer`, `design`…).
 
 To add a tag, put it in `tags.yml` under one of those groups, with the label
 pages show:
