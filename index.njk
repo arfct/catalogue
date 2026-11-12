@@ -38,7 +38,7 @@ permalink: "{{ site.catalog_path }}"
             {% if entry.data.icon_macos %}<img class="entry-card__icon app-icon app-icon--macos" src="{{ entry.data.icon_macos | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% elif entry.data.icon %}<img class="entry-card__icon app-icon app-icon--{{ entry.data.icon_shape or 'squircle' }}" src="{{ entry.data.icon | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% endif %}
             {{ entry.data.title }}
           </h2>
-          <p class="entry-card__date">{{ entry.data.date | entryDate }}</p>
+          <p class="entry-card__date">{{ entry.data.date | entryDate }}{% set status = entry.data.status or "wip" %}<span class="entry-card__status entry-card__status--{{ status }}">{{ status | statusLabel }}</span></p>
         </div>
       </a>
     {% endfor %}
