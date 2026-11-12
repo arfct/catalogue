@@ -179,8 +179,9 @@ test("the worker hands the X card to Twitterbot only", async () => {
   const env = { ASSETS: { fetch: async () => new Response(page, { headers: { "content-type": "text/html" } }) } };
   const fetchAs = async (ua) => (await worker.fetch(new Request("https://example.com/p/x/", { headers: { "user-agent": ua } }), env)).text();
   assert.match(await fetchAs("Twitterbot/1.0"), /name="twitter:image" content="card.jpg"/);
+  assert.match(await fetchAs("Mozilla/5.0 (compatible; Twitterbot/1.0)"), /name="twitter:image"/);
   const imessage = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0";
-  for (const ua of [imessage, "Slackbot-LinkExpanding 1.0", "Mozilla/5.0 (compatible; Discordbot/2.0)", "facebookexternalhit/1.1"]) {
+  for (const ua of [imessage, "TelegramBot (like TwitterBot)", "Slackbot-LinkExpanding 1.0", "Mozilla/5.0 (compatible; Discordbot/2.0)", "facebookexternalhit/1.1"]) {
     assert.doesNotMatch(await fetchAs(ua), /twitter:image/, ua);
   }
 });

@@ -9,11 +9,12 @@
 // Discord counts twitter:image among its images. _routes.json keeps media,
 // styles and preview images off this worker.
 
-// iMessage's fetcher claims Twitterbot too, alongside Safari and
-// facebookexternalhit; a real X crawler never claims to be Safari.
+// X's crawler sends "Twitterbot/<version>". iMessage's fetcher sends that
+// too, alongside Safari and facebookexternalhit (a real X crawler never claims
+// to be Safari), and Telegram's says "TelegramBot (like TwitterBot)".
 function isX(userAgent) {
   const ua = userAgent.toLowerCase();
-  if (!ua.includes("twitterbot")) return false;
+  if (!/(^|[\s(;])twitterbot\/\d/.test(ua)) return false;
   return !(ua.includes("safari") && ua.includes("applewebkit") && ua.includes("facebookexternalhit"));
 }
 
