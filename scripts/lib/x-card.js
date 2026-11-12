@@ -111,21 +111,24 @@ const ICON_SHADOWS = [
   { dy: 0.06, sigma: 0.07, opacity: 0.15 }, // ambient
 ];
 async function shadowLayers(sharp, png, size, left, top) {
+  // Built step by step in JS: sharp reorders chained operations, so a single
+  // pipeline (extract alpha → scale → pad → blur) doesn't run in that order.
+  const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
   const out = [];
   for (const { dy, sigma, opacity } of ICON_SHADOWS) {
     const s = Math.max(0.3, sigma * size);
     const pad = Math.ceil(s * 3);
-    const alpha = await sharp(png)
-      .ensureAlpha()
-      .extractChannel(3)
-      .linear(opacity, 0)
-      .extend({ top: pad, bottom: pad, left: pad, right: pad, background: 0 })
-      .blur(s)
-      .raw()
-      .toBuffer({ resolveWithObject: true });
-    const { width: w, height: h } = alpha.info;
+    const w = info.width + pad * 2;
+    const h = info.height + pad * 2;
+    const mask = Buffer.alloc(w * h);
+    for (let y = 0; y < info.height; y++) {
+      for (let x = 0; x < info.width; x++) {
+        mask[(y + pad) * w + x + pad] = Math.round(data[(y * info.width + x) * info.channels + 3] * opacity);
+      }
+    }
+    const blurred = await sharp(await sharp(mask, { raw: { width: w, height: h, channels: 1 } }).blur(s).png().toBuffer()).extractChannel(0).raw().toBuffer();
     const input = await sharp({ create: { width: w, height: h, channels: 3, background: "#000000" } })
-      .joinChannel(alpha.data, { raw: { width: w, height: h, channels: 1 } })
+      .joinChannel(blurred, { raw: { width: w, height: h, channels: 1 } })
       .png()
       .toBuffer();
     out.push({ input, left: Math.round(left - pad), top: Math.round(top - pad + dy * size) });
