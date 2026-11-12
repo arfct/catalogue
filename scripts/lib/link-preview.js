@@ -14,7 +14,7 @@ const xCard = require("./x-card");
 
 // Bump when the rendering changes, so every image gets a new URL and the
 // platforms that cache previews by image URL fetch the new one.
-const VERSION = 3;
+const VERSION = 4;
 
 const CARD = { width: 1200, height: 630 };
 const ICON_SIZE = 180;
@@ -126,14 +126,14 @@ function resolveFonts(fonts) {
 
 // The composed card for X: title or wordmark, description, icon, hero, the
 // category and tags line, and the site's wordmark (see x-card.js).
-function xCardJob({ name, title, wordmark, description, icon, iconKind, iconShape, hero, kicker, siteWordmark, siteTitle, fonts, colors }) {
+function xCardJob({ name, title, wordmark, description, descriptionShort, icon, iconKind, iconShape, hero, kicker, siteWordmark, siteTitle, fonts, colors }) {
   const fontFiles = resolveFonts(fonts);
   if (!fontFiles) return null;
   const files = [hero, icon, wordmark, siteWordmark, ...Object.values(fontFiles)].filter(Boolean);
   return register(
     "x",
     `${name}-x`,
-    { files, title, wordmark, description, icon, iconKind, iconShape: iconShape || "squircle", hero, kicker, siteWordmark, siteTitle, fonts: fontFiles, colors },
+    { files, title, wordmark, description, descriptionShort, icon, iconKind, iconShape: iconShape || "squircle", hero, kicker, siteWordmark, siteTitle, fonts: fontFiles, colors },
     "jpg"
   );
 }

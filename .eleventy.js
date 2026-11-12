@@ -120,6 +120,8 @@ module.exports = function (eleventyConfig) {
     // Twitterbot): the entry's own og_image, else a card composed from its
     // assets. X shows a large card as the image alone, so the card carries the
     // title and description itself.
+    // The date leads the kicker, as a year.
+    const entryYear = (d) => (d instanceof Date ? String(d.getUTCFullYear()) : (String(d ?? "").match(/\d{4}/) || [""])[0]);
     let xCard = null;
     if (siteUrl && isEntry && ctx.og_image) {
       const src = String(ctx.og_image);
@@ -134,12 +136,13 @@ module.exports = function (eleventyConfig) {
         name: page.fileSlug,
         title: ctx.title,
         wordmark: local(ctx.wordmark),
-        description: linkPreview.summarize(description, 180),
+        description: linkPreview.summarize(description, 400),
+        descriptionShort: linkPreview.summarize(description, 180),
         icon: macIcon || squareIcon,
         iconKind: macIcon ? "macos" : "square",
         iconShape: ctx.icon_shape,
         hero: heroFile,
-        kicker: [...category, ...(ctx.tags || [])].map(String).join(" · "),
+        kicker: [entryYear(ctx.date), ...category, ...(ctx.tags || [])].filter(Boolean).map(String).join(" · "),
         siteWordmark: site.wordmark && fs.existsSync(site.wordmark) ? site.wordmark : null,
         siteTitle: site.title,
         fonts: preview.fonts,
