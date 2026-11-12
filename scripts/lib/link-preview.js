@@ -11,10 +11,11 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const xCard = require("./x-card");
+const { fallbackVersions } = require("./font-stack");
 
 // Bump when the rendering changes, so every image gets a new URL and the
 // platforms that cache previews by image URL fetch the new one.
-const VERSION = 7;
+const VERSION = 8;
 
 const CARD = { width: 1200, height: 630 };
 const ICON_SIZE = 180;
@@ -92,12 +93,15 @@ function slugify(value) {
 
 // Register a render job and return its file name under /og/. `inputs` holds
 // everything that changes the pixels; local source files are hashed by content.
+// Font paths are left out of the key (the font files are hashed by content
+// with the rest), so the name doesn't change with the checkout's location.
 function register(kind, name, inputs, ext) {
   const sources = (inputs.files || []).map((f) => [f, fileHash(f)]);
   if (sources.some(([, hash]) => !hash)) return null;
+  const { fonts, ...rest } = inputs;
   const key = crypto
     .createHash("sha1")
-    .update(JSON.stringify({ VERSION, kind, ...inputs, files: sources.map(([, h]) => h) }))
+    .update(JSON.stringify({ VERSION, kind, ...rest, fallbacks: fonts ? fallbackVersions() : undefined, files: sources.map(([, h]) => h) }))
     .digest("hex")
     .slice(0, 10);
   const file = `${slugify(name)}.${key}.${ext}`;
@@ -124,8 +128,21 @@ function resolveFonts(fonts) {
   return out;
 }
 
-// The composed card for X: title or wordmark, description, icon, hero, the
-// category and tags line, and the site's wordmark (see x-card.js).
+// The kicker over the X card's title: the year, the category unless it is
+// the default `product` (or the site has only one), then the tags, each
+// through `label` (the site's tag vocabulary).
+function kickerText({ date, category, tags, categories }, label = (t) => t) {
+  const year = date instanceof Date ? String(date.getUTCFullYear()) : (String(date ?? "").match(/\d{4}/) || [""])[0];
+  const showCategory = categories?.length > 1 && category && category !== "product";
+  return [year, ...(showCategory ? [category] : []), ...(tags || []).map((t) => label(String(t)))]
+    .filter(Boolean)
+    .map(String)
+    .join(" · ");
+}
+
+// The composed card for X: the kicker (year, category, tags), the title or
+// wordmark, the description, the first image with the icon at its bottom
+// right, and the site's wordmark (see x-card.js).
 function xCardJob({ name, title, wordmark, description, descriptionShort, icon, iconKind, iconShape, hero, kicker, siteWordmark, siteTitle, fonts, colors }) {
   const fontFiles = resolveFonts(fonts);
   if (!fontFiles) return null;
@@ -147,9 +164,7 @@ function iconJob({ name, icon, background, inset = 0 }) {
 
 // ─── Rendering ───────────────────────────────────────────────────────────────
 
-function load(sharp, file) {
-  return sharp(file, /\.svg$/i.test(file) ? { density: 384 } : {});
-}
+const { load, displaySize } = xCard; // EXIF-oriented loading
 
 async function encodeCard(pipeline) {
   for (const quality of [90, 86, 80, 72, 64, 56]) {
@@ -162,7 +177,7 @@ async function encodeCard(pipeline) {
 async function renderImageCard(sharp, job) {
   const { width: W, height: H } = CARD;
   const source = job.files[0];
-  const meta = await load(sharp, source).metadata();
+  const meta = await displaySize(sharp, source);
   const ratio = meta.width / meta.height;
   // Close to 1.91:1: fill the card. Anything else: letterbox it whole on the
   // background, so tall phone screenshots and square art aren't cropped.
@@ -176,7 +191,7 @@ async function renderImageCard(sharp, job) {
   const scale = Math.min(boxW / meta.width, boxH / meta.height, 2); // upscale at most 2×
   const w = Math.round(meta.width * scale);
   const h = Math.round(meta.height * scale);
-  const art = await load(sharp, source).resize(w, h).png().toBuffer();
+  const art = await load(sharp, source).resize(w, h, { fit: "fill" }).png().toBuffer();
   const card = sharp({ create: { width: W, height: H, channels: 3, background: job.background } }).composite([
     { input: art, left: Math.round((W - w) / 2), top: Math.round((H - h) / 2) },
   ]);
@@ -204,7 +219,9 @@ async function renderJob(sharp, job) {
   return renderIcon(sharp, job);
 }
 
-// Render every registered job into <outputDir>/og/, through the cache.
+// Render every registered job into <outputDir>/og/, through the cache. The
+// pages already name these files, so a render that fails fails the build
+// (after trying the rest), rather than shipping tags that point at a 404.
 async function renderAll(outputDir, { cacheDir = path.join(".cache", "og"), log = () => {} } = {}) {
   if (!jobs.size) return [];
   const sharp = require("sharp");
@@ -212,18 +229,24 @@ async function renderAll(outputDir, { cacheDir = path.join(".cache", "og"), log 
   fs.mkdirSync(outDir, { recursive: true });
   fs.mkdirSync(cacheDir, { recursive: true });
   const written = [];
+  const failed = [];
   for (const job of jobs.values()) {
     const cached = path.join(cacheDir, job.file);
     if (!fs.existsSync(cached)) {
       try {
         fs.writeFileSync(cached, await renderJob(sharp, job));
       } catch (err) {
-        log(`link preview: could not render ${job.file} from ${job.files.join(", ")}: ${err.message}`);
+        const sources = job.files.filter((f) => !Object.values(job.fonts || {}).includes(f));
+        failed.push(`${job.file} from ${sources.join(", ") || "(no source file)"}: ${err.message}`);
         continue;
       }
     }
     fs.copyFileSync(cached, path.join(outDir, job.file));
     written.push(job.file);
+  }
+  if (failed.length) {
+    for (const line of failed) log(`link preview: could not render ${line}`);
+    throw new Error(`link preview: could not render ${failed.join("; ")}`);
   }
   return written;
 }
@@ -237,6 +260,7 @@ module.exports = {
   readBody,
   cardJob,
   xCardJob,
+  kickerText,
   iconJob,
   renderAll,
   jobs,

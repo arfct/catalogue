@@ -1,15 +1,23 @@
 // The composed 1200×630 card served to X (Twitterbot) as twitter:image.
 //
 // X shows a large card as the image alone, with no title or description under
-// it, so this card carries them: the entry's category and tags, its icon and
-// title (or its wordmark), the short description, its first image, and the
-// site's wordmark. Everyone else gets the plain image through og:image.
+// it, so this card carries them. Left column, top down: a kicker (the year,
+// then the category unless it is the default `product`, then the tags by
+// label), the title or the entry's wordmark, and the description (one line
+// more than the short summary needs, filled from the longer text); the site's
+// wordmark sits bottom left. Right: the entry's first image fitted into a
+// 630×630 square, with the entry's icon at the square's bottom right, masked
+// and lifted by a Material-style shadow. With no image, the text column takes
+// the full width and the icon sits at its bottom right. Everyone else gets
+// the plain image through og:image.
 //
 // Text is set as SVG paths from font files with opentype.js, so the card
-// renders the same on any machine (no system fonts involved).
+// renders the same on any machine (no system fonts involved). Characters the
+// main font lacks come from fallback fonts, glyph by glyph (font-stack.js).
 
 const fs = require("fs");
 const opentype = require("opentype.js");
+const { fontStack } = require("./font-stack");
 
 const W = 1200;
 const H = 630;
@@ -46,15 +54,23 @@ function width(font, text, size, tracking = 0) {
 }
 
 // One line of text as an SVG path; tracking in em, set glyph by glyph.
+// `font` is a FontStack (font-stack.js).
 function textPath(font, text, x, y, size, fill, tracking = 0) {
-  if (!tracking) return `<path d="${font.getPath(text, x, y, size).toPathData(2)}" fill="${fill}"/>`;
+  if (!tracking) return font.svg(text, x, y, size, escapeXml(fill));
   let cursor = x;
   const parts = [];
   for (const ch of text) {
-    parts.push(font.getPath(ch, cursor, y, size).toPathData(2));
+    parts.push(font.svg(ch, cursor, y, size, escapeXml(fill)));
     cursor += font.getAdvanceWidth(ch, size) + tracking * size;
   }
-  return `<path d="${parts.join(" ")}" fill="${fill}"/>`;
+  return parts.join("");
+}
+
+// Loads each role's font stack with the glyphs `texts` need.
+async function loadStacks(job, roles, texts) {
+  const fonts = {};
+  for (const role of roles) fonts[role] = await fontStack(job.fonts[role], ...texts);
+  return fonts;
 }
 
 // Greedy word wrap into at most `maxLines`, the last one ellipsized.
@@ -136,16 +152,27 @@ async function shadowLayers(sharp, png, size, left, top) {
   return out;
 }
 
+// An image file, turned upright from its EXIF orientation (photos from a
+// phone are often stored sideways with a tag saying so).
+function load(sharp, file) {
+  return sharp(file, /\.svg$/i.test(file) ? { density: 384 } : {}).rotate();
+}
+
+// Width and height as displayed, after the EXIF orientation is applied.
+async function displaySize(sharp, file) {
+  const meta = await sharp(file, /\.svg$/i.test(file) ? { density: 384 } : {}).metadata();
+  return meta.orientation >= 5 ? { width: meta.height, height: meta.width } : { width: meta.width, height: meta.height };
+}
+
 async function iconLayer(sharp, file, kind, shape, box) {
-  const svgOpts = /\.svg$/i.test(file) ? { density: 384 } : {};
   if (kind === "macos") {
     // Apple's macOS grid draws the shape at 824 of 1024; scale so the shape,
     // not the canvas, fills the box, and let the shadow spill past it.
     const size = Math.round(box / (824 / 1024));
-    const input = await sharp(file, svgOpts).resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+    const input = await load(sharp, file).resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
     return { input, offset: -Math.round((size - box) / 2), size };
   }
-  const art = await sharp(file, svgOpts).resize(box, box, { fit: shape === "none" ? "contain" : "cover", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
+  const art = await load(sharp, file).resize(box, box, { fit: shape === "none" ? "contain" : "cover", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
   if (shape === "none") return { input: art, offset: 0, size: box };
   const mask = shape === "circle"
     ? `<svg xmlns="http://www.w3.org/2000/svg" width="${box}" height="${box}"><circle cx="${box / 2}" cy="${box / 2}" r="${box / 2}"/></svg>`
@@ -156,18 +183,25 @@ async function iconLayer(sharp, file, kind, shape, box) {
 
 // An image fitted into a box (never upscaled past 2×), returned with its size.
 async function fitted(sharp, file, boxW, boxH) {
-  const svgOpts = /\.svg$/i.test(file) ? { density: 384 } : {};
-  const meta = await sharp(file, svgOpts).metadata();
-  const scale = Math.min(boxW / meta.width, boxH / meta.height, /\.svg$/i.test(file) ? 8 : 2);
-  const w = Math.max(1, Math.round(meta.width * scale));
-  const h = Math.max(1, Math.round(meta.height * scale));
-  return { input: await sharp(file, svgOpts).resize(w, h).png().toBuffer(), w, h };
+  const size = await displaySize(sharp, file);
+  const scale = Math.min(boxW / size.width, boxH / size.height, /\.svg$/i.test(file) ? 8 : 2);
+  const w = Math.max(1, Math.round(size.width * scale));
+  const h = Math.max(1, Math.round(size.height * scale));
+  return { input: await load(sharp, file).resize(w, h, { fit: "fill" }).png().toBuffer(), w, h };
 }
 
 async function renderXCard(sharp, job) {
   const colors = { background: "#ffffff", text: "#1a1a1a", muted: "#767676", panel: "#f2f2f2", ...(job.colors || {}) };
-  const fonts = {};
-  for (const role of ["title", "text", "label"]) fonts[role] = loadFont(job.fonts[role]);
+  const fonts = await loadStacks(job, ["title", "text", "label"], [job.title, job.kicker, job.description, job.descriptionShort, job.siteTitle]);
+  // Only what the fonts can draw: no .notdef boxes.
+  job = {
+    ...job,
+    title: fonts.title.clean(job.title),
+    kicker: fonts.label.clean(job.kicker),
+    description: fonts.text.clean(job.description),
+    descriptionShort: fonts.text.clean(job.descriptionShort),
+    siteTitle: fonts.title.clean(job.siteTitle),
+  };
 
   const layers = [];
   const svg = [];
@@ -177,13 +211,13 @@ async function renderXCard(sharp, job) {
 
   // Hero panel.
   if (job.hero) {
-    svg.push(`<rect x="${split}" y="0" width="${W - split}" height="${H}" fill="${colors.panel}"/>`);
+    svg.push(`<rect x="${split}" y="0" width="${W - split}" height="${H}" fill="${escapeXml(colors.panel)}"/>`);
     const inset = 40;
     const art = await fitted(sharp, job.hero, W - split - inset * 2, H - inset * 2);
     layers.push({ input: art.input, left: split + Math.round((W - split - art.w) / 2), top: Math.round((H - art.h) / 2) });
   }
 
-  // Kicker: category and tags, small uppercase, as on the site.
+  // Kicker: year, category and tags, small uppercase, as on the site.
   let y = 86;
   if (job.kicker) {
     const size = 17;
@@ -249,7 +283,7 @@ async function renderXCard(sharp, job) {
     svg.push(textPath(fonts.title, job.siteTitle, pad, H - pad - 4, 24, colors.muted));
   }
 
-  const base = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${colors.background}"/>${svg.join("")}</svg>`;
+  const base = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${escapeXml(colors.background)}"/>${svg.join("")}</svg>`;
   return sharp(Buffer.from(base)).composite(layers).png().toBuffer();
 }
 
@@ -257,8 +291,8 @@ async function renderXCard(sharp, job) {
 // title) and its description, centred on white.
 async function renderSiteCard(sharp, job) {
   const colors = { background: "#ffffff", text: "#1a1a1a", muted: "#767676", ...(job.colors || {}) };
-  const fonts = {};
-  for (const role of ["title", "text"]) fonts[role] = loadFont(job.fonts[role]);
+  const fonts = await loadStacks(job, ["title", "text"], [job.title, job.description]);
+  job = { ...job, title: fonts.title.clean(job.title), description: fonts.text.clean(job.description) };
   const layers = [];
   const svg = [];
   const iconSize = job.icon ? 168 : 0;
@@ -285,8 +319,8 @@ async function renderSiteCard(sharp, job) {
   lines.forEach((line, i) => {
     svg.push(textPath(fonts.text, line, (W - width(fonts.text, line, descSize)) / 2, y + descSize + i * lineH, descSize, colors.muted));
   });
-  const base = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${colors.background}"/>${svg.join("")}</svg>`;
+  const base = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${escapeXml(colors.background)}"/>${svg.join("")}</svg>`;
   return sharp(Buffer.from(base)).composite(layers).png().toBuffer();
 }
 
-module.exports = { renderXCard, renderSiteCard, resolveFont, DEFAULT_FONTS, wrap, loadFont, squirclePath, escapeXml };
+module.exports = { renderXCard, renderSiteCard, resolveFont, DEFAULT_FONTS, wrap, loadFont, squirclePath, escapeXml, load, displaySize };

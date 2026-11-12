@@ -96,8 +96,8 @@ function parseEntry(text) {
 // The order fields are written in, matching projects/_sample.md. Anything else
 // follows, in the order the author wrote it.
 const FIELD_ORDER = [
-  "title", "date", "category", "tags", "url", "links", "media", "media_type", "og_image", "icon", "icon_macos", "icon_shape", "wordmark",
-  "client", "role", "credits", "formerly", "unconfirmed", "source", "source_commit",
+  "title", "date", "category", "tags", "url", "links", "media", "media_type", "icon", "icon_macos", "icon_shape", "wordmark", "summary",
+  "og_image", "client", "role", "credits", "formerly", "unconfirmed", "source", "source_commit",
 ];
 
 function formatEntry(data, body, header) {

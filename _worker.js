@@ -10,16 +10,18 @@
 // styles and preview images off this worker.
 
 // X's crawler sends "Twitterbot/<version>". iMessage's fetcher sends that
-// too, alongside Safari and facebookexternalhit (a real X crawler never claims
-// to be Safari), and Telegram's says "TelegramBot (like TwitterBot)".
+// too, alongside AppleWebKit and facebookexternalhit (a real X crawler claims
+// neither), and Telegram's says "TelegramBot (like TwitterBot)".
 function isX(userAgent) {
   const ua = userAgent.toLowerCase();
   if (!/(^|[\s(;])twitterbot\/\d/.test(ua)) return false;
-  return !(ua.includes("safari") && ua.includes("applewebkit") && ua.includes("facebookexternalhit"));
+  return !(ua.includes("applewebkit") || ua.includes("facebookexternalhit"));
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
+    // If anything below throws, serve the static file rather than an error page.
+    ctx?.passThroughOnException?.();
     const response = await env.ASSETS.fetch(request);
     if (!(response.headers.get("content-type") || "").includes("text/html")) return response;
     const html = new Response(response.body, response);

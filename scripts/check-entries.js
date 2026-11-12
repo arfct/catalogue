@@ -170,11 +170,9 @@ async function checkEntry(file) {
     }
   }
 
-  // The link-preview image: the entry's own when it names one, else the build
-  // derives one from the first image.
-  if (!data.og_image) {
-    warnings.push("no og_image; the build composes the 1200×630 X card from the entry's assets");
-  } else {
+  // The X card: optional. Without og_image the build composes one from the
+  // entry's title, description, icon and first image, which is the default.
+  if (data.og_image) {
     const src = String(data.og_image);
     const { width, height, maxBytes } = schema.OG_IMAGE;
     const file = localMediaPath(src);

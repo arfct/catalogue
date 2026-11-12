@@ -89,8 +89,9 @@ module.exports = function (eleventyConfig) {
       (isEntry && linkPreview.summarize(linkPreview.readBody(page.inputPath))) ||
       linkPreview.summarize(site.description || "", 300);
 
-    // The card: the entry's first image, else the site's card.
-    const hero = isEntry && !["video", "audio"].includes(ctx.media_type) ? (ctx.media || [])[0] : null;
+    // The card: the entry's first still image, else the site's card.
+    const still = (m) => m && /\.(png|jpe?g|webp|gif|avif|tiff?|svg)$/i.test(String(m.src || ""));
+    const hero = isEntry && !["video", "audio"].includes(ctx.media_type) ? (ctx.media || []).find(still) || null : null;
     const heroFile = hero ? local(hero.src) : null;
     const siteIcon = site.icon && fs.existsSync(site.icon) ? site.icon : null;
     // og:image, for everyone but X: the entry's first image fitted to
@@ -116,12 +117,10 @@ module.exports = function (eleventyConfig) {
       card = card.file ? { ...card, url: absolute(card.file), ...linkPreview.CARD, type: "image/jpeg" } : null;
     }
 
-    // twitter:image, for X only (functions/_worker.js swaps it in for
+    // twitter:image, for X only (_worker.js swaps it in for
     // Twitterbot): the entry's own og_image, else a card composed from its
     // assets. X shows a large card as the image alone, so the card carries the
     // title and description itself.
-    // The date leads the kicker, as a year.
-    const entryYear = (d) => (d instanceof Date ? String(d.getUTCFullYear()) : (String(d ?? "").match(/\d{4}/) || [""])[0]);
     let xCard = null;
     if (siteUrl && isEntry && ctx.og_image) {
       const src = String(ctx.og_image);
@@ -131,8 +130,8 @@ module.exports = function (eleventyConfig) {
     } else if (siteUrl && isEntry) {
       const macIcon = local(ctx.icon_macos);
       const squareIcon = local(ctx.icon);
-      // "product" is the default kind of entry and says nothing on a card.
-      const category = site.categories?.length > 1 && ctx.category && ctx.category !== "product" ? [ctx.category] : [];
+      // Tags print as the site does: by label, when a tagLabel filter exists.
+      const tagLabel = eleventyConfig.getFilter("tagLabel") || ((t) => t);
       const file = linkPreview.xCardJob({
         name: page.fileSlug,
         title: ctx.title,
@@ -145,7 +144,7 @@ module.exports = function (eleventyConfig) {
         iconKind: macIcon ? "macos" : "square",
         iconShape: ctx.icon_shape,
         hero: heroFile,
-        kicker: [entryYear(ctx.date), ...category, ...(ctx.tags || [])].filter(Boolean).map(String).join(" · "),
+        kicker: linkPreview.kickerText({ date: ctx.date, category: ctx.category, tags: ctx.tags, categories: site.categories }, tagLabel),
         siteWordmark: site.wordmark && fs.existsSync(site.wordmark) ? site.wordmark : null,
         siteTitle: site.title,
         fonts: preview.fonts,
@@ -179,9 +178,20 @@ module.exports = function (eleventyConfig) {
     };
   });
 
+  // Jobs are registered while pages render; start each build (and each
+  // rebuild under --serve) with none, so stale ones aren't copied out.
+  eleventyConfig.on("eleventy.before", () => linkPreview.jobs.clear());
+
   // `directories` carries a CLI --output; `dir` only the configured default.
-  eleventyConfig.on("eleventy.after", async ({ dir, directories }) => {
-    await linkPreview.renderAll(directories?.output || dir.output, { log: (msg) => console.warn(`[catalogue] ${msg}`) });
+  // A failed render fails a build; under --serve it is logged and the
+  // server keeps running.
+  eleventyConfig.on("eleventy.after", async ({ dir, directories, runMode }) => {
+    const log = (msg) => console.warn(`[catalogue] ${msg}`);
+    try {
+      await linkPreview.renderAll(directories?.output || dir.output, { log });
+    } catch (err) {
+      if (runMode === "build" || !runMode) throw err;
+    }
   });
 
   eleventyConfig.addCollection("entries", (api) => {

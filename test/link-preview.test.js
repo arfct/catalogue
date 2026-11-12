@@ -5,7 +5,9 @@ const os = require("os");
 const path = require("path");
 const { spawnSync } = require("child_process");
 const sharp = require("sharp");
-const { summarize, plainText } = require("../scripts/lib/link-preview");
+const { summarize, plainText, kickerText } = require("../scripts/lib/link-preview");
+const { FontStack } = require("../scripts/lib/font-stack");
+const xCard = require("../scripts/lib/x-card");
 
 const repo = path.join(__dirname, "..");
 
@@ -37,7 +39,7 @@ test("summarize never returns a newline", () => {
 
 // ─── A real build ────────────────────────────────────────────────────────────
 
-function buildSite({ ogImage } = {}) {
+function buildSite({ ogImage, tags } = {}) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "catalogue-lp-"));
   for (const f of [".eleventy.js", "_includes", "index.njk", "pages", "redirects.njk", "styles", "scripts", "_worker.js", "_routes.json"]) {
     fs.cpSync(path.join(repo, f), path.join(dir, f), { recursive: true });
@@ -55,6 +57,7 @@ function buildSite({ ogImage } = {}) {
     "---",
     "title: Gadget",
     "date: 2024-01",
+    tags ? `tags: [${tags.map((t) => JSON.stringify(t)).join(", ")}]` : null,
     "media:",
     "  - src: gadget/hero.png",
     "    alt: A tall \"red\" screenshot",
@@ -74,9 +77,14 @@ async function images(dir, ogImage) {
   if (ogImage) await sharp({ create: { width: 1200, height: 630, channels: 3, background: "#0033cc" } }).png().toFile(path.join(dir, "media", "gadget", ogImage));
 }
 
-function eleventy(dir) {
+function runEleventy(dir, args = []) {
   const out = path.join(dir, "out"); // not the configured _site, so a CLI --output is honoured
-  const result = spawnSync(process.execPath, [path.join(repo, "node_modules", "@11ty", "eleventy", "cmd.cjs"), `--output=${out}`], { cwd: dir, encoding: "utf8" });
+  const result = spawnSync(process.execPath, [path.join(repo, "node_modules", "@11ty", "eleventy", "cmd.cjs"), `--output=${out}`, ...args], { cwd: dir, encoding: "utf8" });
+  return { out, result };
+}
+
+function eleventy(dir, args) {
+  const { out, result } = runEleventy(dir, args);
   assert.strictEqual(result.status, 0, result.stderr + result.stdout);
   return out;
 }
@@ -165,6 +173,8 @@ test("an entry gets a composed X card, and no twitter:image in the static HTML",
 test("the worker hands the X card to Twitterbot only", async () => {
   const { default: worker } = await import(path.join(repo, "_worker.js"));
   const page = '<html><head><meta property="og:image" content="hero.jpg"><meta name="catalogue:x-image" content="card.jpg"></head></html>';
+  // A regex stand-in for Cloudflare's HTMLRewriter: it covers the user-agent
+  // rule and the renaming, not the CSS selector, which is checked live.
   globalThis.HTMLRewriter ??= class {
     on(selector, handler) { this.handler = handler; return this; }
     async transform(response) {
@@ -181,7 +191,7 @@ test("the worker hands the X card to Twitterbot only", async () => {
   assert.match(await fetchAs("Twitterbot/1.0"), /name="twitter:image" content="card.jpg"/);
   assert.match(await fetchAs("Mozilla/5.0 (compatible; Twitterbot/1.0)"), /name="twitter:image"/);
   const imessage = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/601.2.4 (KHTML, like Gecko) Version/9.0.1 Safari/601.2.4 facebookexternalhit/1.1 Facebot Twitterbot/1.0";
-  for (const ua of [imessage, "TelegramBot (like TwitterBot)", "Slackbot-LinkExpanding 1.0", "Mozilla/5.0 (compatible; Discordbot/2.0)", "facebookexternalhit/1.1"]) {
+  for (const ua of [imessage, "facebookexternalhit/1.1 Facebot Twitterbot/1.0", "Mozilla/5.0 AppleWebKit/605.1.15 Twitterbot/1.0", "TelegramBot (like TwitterBot)", "Slackbot-LinkExpanding 1.0", "Mozilla/5.0 (compatible; Discordbot/2.0)", "facebookexternalhit/1.1"]) {
     assert.doesNotMatch(await fetchAs(ua), /twitter:image/, ua);
   }
 });
@@ -192,10 +202,10 @@ function check(dir) {
   return spawnSync(process.execPath, [path.join(dir, "scripts", "check-entries.js")], { cwd: dir, encoding: "utf8" });
 }
 
-test("check warns when og_image is absent and errors when it's the wrong size", async () => {
+test("check is quiet when og_image is absent and errors when it's the wrong size", async () => {
   const absent = buildSite();
   await images(absent.dir);
-  assert.match(check(absent.dir).stdout, /! gadget: no og_image; the build composes/);
+  assert.doesNotMatch(check(absent.dir).stdout, /og_image/);
 
   const wrong = buildSite({ ogImage: "card.png" });
   await images(wrong.dir);
@@ -268,4 +278,124 @@ test("check holds icon-macos to a transparent 1024 square", async () => {
   assert.match(opaque.stdout, /icon-macos has opaque corners/);
   const small = await setup({ size: 256 });
   assert.match(small.stdout, /icon-macos is 256px; use 1024 \(512 minimum\)/);
+});
+
+// ─── Failed renders ──────────────────────────────────────────────────────────
+
+test("a preview image that can't be rendered fails the build, naming the file and why", async () => {
+  const { dir } = buildSite();
+  await images(dir);
+  fs.writeFileSync(path.join(dir, "media", "gadget", "hero.png"), "not a png");
+  const { result } = runEleventy(dir);
+  assert.notStrictEqual(result.status, 0, "the build must fail");
+  const output = result.stderr + result.stdout;
+  assert.match(output, /could not render gadget\.[0-9a-f]{10}\.jpg from media\/gadget\/hero\.png: .*unsupported image format/i);
+});
+
+test("a video as the first media item is skipped for the card, not rendered", async () => {
+  const { dir } = buildSite();
+  await images(dir);
+  fs.writeFileSync(path.join(dir, "media", "gadget", "clip.mp4"), "not an image");
+  const file = path.join(dir, "projects", "gadget.md");
+  fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace("media:\n", "media:\n  - src: gadget/clip.mp4\n    alt: A clip\n"));
+  const out = eleventy(dir);
+  const html = fs.readFileSync(path.join(out, "p", "gadget", "index.html"), "utf8");
+  assert.strictEqual(meta(html, "og:image:alt"), "A tall &quot;red&quot; screenshot");
+});
+
+// ─── Text the main font can't draw ───────────────────────────────────────────
+
+const inter = (weight) => require.resolve(`@fontsource/inter/files/inter-latin-${weight}-normal.woff`);
+const MIXED = "Bubbles of random 🍌🍓🍊🍇 on a gradient of · Erdős Łódź → 日本語 ﬁ H₂O 👨\u200D👩\u200D👧 \u{10FFFD}end";
+
+test("characters outside Inter's latin subset come from fallback fonts, glyph by glyph", async () => {
+  const stack = await new FontStack(inter(400)).prepare(MIXED);
+  const clean = stack.clean(MIXED);
+  for (const ch of clean) {
+    if (ch === " ") continue;
+    assert.ok(stack.fontFor(ch), `no font draws ${ch} (U+${ch.codePointAt(0).toString(16)})`);
+  }
+  for (const ch of ["🍌", "🍓", "🍊", "🍇", "ő", "Ł", "→", "日", "本", "語", "👨", "👧"]) assert.ok(clean.includes(ch), `${ch} kept`);
+  const from = (ch) => stack.fontFor(ch).names.fontFamily.en;
+  assert.match(from("ő"), /Inter/);
+  assert.match(from("→"), /Noto Sans Math/);
+  assert.match(from("日"), /Noto Sans SC/);
+  assert.match(from("🍌"), /Noto Emoji/);
+  // Compatibility forms stand in where they draw; anything else goes, with
+  // its space, and joiners leave nothing behind.
+  assert.ok(clean.includes(" H2O "), clean); // no font has ₂: its compatibility form
+  assert.ok(/ (ﬁ|fi) /.test(clean), clean);
+  assert.ok(!clean.includes("\u{10FFFD}") && !clean.includes("\u200D"), clean);
+  assert.ok(clean.endsWith(" end") && !clean.includes("  "), clean);
+});
+
+test("the X card draws those characters without .notdef boxes", async () => {
+  const fonts = { title: inter(600), text: inter(400), label: inter(500) };
+  const job = { title: "Erdős → 日本", kicker: "2024 · Łódź", description: MIXED, fonts };
+  // Every glyph path the card draws comes from a real glyph, never index 0.
+  const stack = await new FontStack(inter(400)).prepare(MIXED);
+  for (const run of stack.runs(stack.clean(MIXED))) {
+    for (const ch of run.text) if (ch !== " ") assert.ok(run.font.charToGlyphIndex(ch) > 0, ch);
+  }
+  const png = await xCard.renderXCard(sharp, job);
+  const info = await sharp(png).metadata();
+  assert.deepStrictEqual([info.width, info.height], [1200, 630]);
+});
+
+// ─── The kicker ──────────────────────────────────────────────────────────────
+
+test("the X card's kicker shows tags by label, after the year and any category", () => {
+  const labels = new Map([["wear-os", "Wear OS"], ["watch-face", "Watch face"]]);
+  const label = (t) => labels.get(t) || t;
+  assert.strictEqual(kickerText({ date: "2026-03", tags: ["wear-os", "watch-face", "time"] }, label), "2026 · Wear OS · Watch face · time");
+  assert.strictEqual(kickerText({ date: new Date(Date.UTC(2020, 6, 1)), category: "tool", categories: [{ id: "product" }, { id: "tool" }], tags: ["wear-os"] }, label), "2020 · tool · Wear OS");
+  assert.strictEqual(kickerText({ date: 2019, category: "product", categories: [{ id: "product" }, { id: "tool" }], tags: [] }), "2019");
+});
+
+test("the build passes tags through the site's tagLabel filter for the X card", async () => {
+  const xImage = async ({ tags, label }) => {
+    const { dir } = buildSite({ tags });
+    await images(dir);
+    // A config that adds a tagLabel filter around the real one.
+    fs.writeFileSync(
+      path.join(dir, "labelled.eleventy.js"),
+      `const base = require("./.eleventy.js");\nmodule.exports = (c) => { const r = base(c); c.addFilter("tagLabel", (t) => (${JSON.stringify(label || {})})[t] || t); return r; };\n`
+    );
+    const out = eleventy(dir, ["--config=labelled.eleventy.js"]);
+    return meta(fs.readFileSync(path.join(out, "p", "gadget", "index.html"), "utf8"), "catalogue:x-image");
+  };
+  // The card's file name hashes its inputs, the kicker among them: a tag
+  // shown by label renders the same card as that label written out.
+  const labelled = await xImage({ tags: ["wear-os"], label: { "wear-os": "Wear OS" } });
+  const written = await xImage({ tags: ["Wear OS"] });
+  const raw = await xImage({ tags: ["wear-os"] });
+  assert.strictEqual(labelled, written);
+  assert.notStrictEqual(labelled, raw);
+});
+
+// ─── EXIF orientation ────────────────────────────────────────────────────────
+
+test("a photo stored sideways with an EXIF orientation is turned upright", async () => {
+  const { dir } = buildSite();
+  await images(dir);
+  // Stored 1200×600 (a 1.91:1-ish card shape), tagged "rotate 90°": it
+  // displays 600×1200, so the card letterboxes it instead of filling.
+  const hero = path.join(dir, "media", "gadget", "hero.jpg");
+  await sharp({ create: { width: 1200, height: 600, channels: 3, background: "#cc2200" } }).jpeg().withMetadata({ orientation: 6 }).toFile(hero);
+  assert.deepStrictEqual(await xCard.displaySize(sharp, hero), { width: 600, height: 1200 });
+  const file = path.join(dir, "projects", "gadget.md");
+  fs.writeFileSync(file, fs.readFileSync(file, "utf8").replace("gadget/hero.png", "gadget/hero.jpg"));
+  const out = eleventy(dir);
+  const html = fs.readFileSync(path.join(out, "p", "gadget", "index.html"), "utf8");
+  const card = path.join(out, new URL(meta(html, "og:image")).pathname);
+  const { data, info } = await sharp(card).raw().toBuffer({ resolveWithObject: true });
+  const px = (x, y) => [...data.subarray((y * info.width + x) * info.channels, (y * info.width + x) * info.channels + 3)];
+  // Left edge is the letterbox background (#f2f2f2), the middle is the photo.
+  assert.ok(px(20, 315).every((v) => v > 230), `edge ${px(20, 315)}`);
+  assert.ok(px(600, 315)[0] > 180 && px(600, 315)[1] < 80, `centre ${px(600, 315)}`);
+  // The X card fits it upright too: a tall image in the 630 square.
+  const x = path.join(out, new URL(meta(html, "catalogue:x-image")).pathname);
+  const xd = await sharp(x).raw().toBuffer({ resolveWithObject: true });
+  const xpx = (px2, py) => [...xd.data.subarray((py * 1200 + px2) * 3, (py * 1200 + px2) * 3 + 3)];
+  assert.ok(xpx(700, 315).every((v) => v > 230), `x card beside a tall photo ${xpx(700, 315)}`);
 });
