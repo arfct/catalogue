@@ -136,7 +136,9 @@ module.exports = function (eleventyConfig) {
         name: page.fileSlug,
         title: ctx.title,
         wordmark: local(ctx.wordmark),
-        description: linkPreview.summarize(description, 400),
+        // The longer text fills the extra line; summarize() keeps whole
+        // sentences where they fit and cuts at a word otherwise.
+        description: linkPreview.summarize(ctx.summary || ctx.description || linkPreview.readBody(page.inputPath), 400),
         descriptionShort: linkPreview.summarize(description, 180),
         icon: macIcon || squareIcon,
         iconKind: macIcon ? "macos" : "square",
