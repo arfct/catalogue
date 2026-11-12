@@ -151,7 +151,7 @@ async function renderXCard(sharp, job) {
   }
 
   // Kicker: category and tags, small uppercase, as on the site.
-  let y = 96;
+  let y = 86;
   if (job.kicker) {
     const size = 17;
     let kicker = job.kicker.toUpperCase();
@@ -159,54 +159,48 @@ async function renderXCard(sharp, job) {
     svg.push(textPath(fonts.label, kicker, pad, y, size, colors.muted, 0.1));
   }
 
-  // Title (or wordmark) on the left; the icon right-aligned to the text
-  // column, taller than the title's line and centred on the title block. A
-  // long title wraps in the room left of the icon.
-  const rowTop = job.kicker ? 128 : 88;
-  let rowBottom = rowTop;
+  // Kicker, title (or wordmark) and description stack tightly from the top;
+  // the icon sits bottom right of the text column, its bottom edge on the
+  // site wordmark's.
+  const kickerBase = y;
   const iconBox = job.icon ? (job.hero ? 132 : 156) : 0;
-  const iconGap = job.icon ? 32 : 0;
-  const iconLeft = pad + colW - iconBox;
-  const placeIcon = async (centreY) => {
-    const icon = await iconLayer(sharp, job.icon, job.iconKind, job.iconShape, iconBox);
-    layers.push({ input: icon.input, left: Math.round(iconLeft + icon.offset), top: Math.round(centreY - iconBox / 2 + icon.offset) });
-  };
-  const room = colW - iconBox - iconGap;
+  const bottom = H - pad;
+  let rowBottom;
   if (job.wordmark) {
-    const markH = 88;
-    const mark = await fitted(sharp, job.wordmark, room, markH);
-    const blockH = Math.max(mark.h, iconBox);
-    layers.push({ input: mark.input, left: pad, top: Math.round(rowTop + (blockH - mark.h) / 2) });
-    if (job.icon) await placeIcon(rowTop + blockH / 2);
-    rowBottom = rowTop + blockH;
+    const mark = await fitted(sharp, job.wordmark, colW, 80);
+    const top = job.kicker ? kickerBase + 20 : pad;
+    layers.push({ input: mark.input, left: pad, top: Math.round(top) });
+    rowBottom = top + mark.h;
   } else {
     const tracking = -0.01;
     const capRatio = (fonts.title.tables.os2?.sCapHeight || fonts.title.unitsPerEm * 0.72) / fonts.title.unitsPerEm;
     let size = job.hero ? 64 : 84;
-    while (size > 40 && width(fonts.title, job.title, size, tracking) > room) size -= 2;
-    const lines = width(fonts.title, job.title, size, tracking) > room ? wrap(fonts.title, job.title, size, room, 2) : [job.title];
-    const lineH = size * 1.12;
+    while (size > 40 && width(fonts.title, job.title, size, tracking) > colW) size -= 2;
+    const lines = width(fonts.title, job.title, size, tracking) > colW ? wrap(fonts.title, job.title, size, colW, 2) : [job.title];
+    const lineH = size * 1.1;
     const cap = size * capRatio;
-    // The text block runs from the first line's cap top to the last baseline.
-    const textH = cap + (lines.length - 1) * lineH;
-    const blockH = Math.max(textH, iconBox);
-    const firstBase = rowTop + (blockH - textH) / 2 + cap;
+    const firstBase = (job.kicker ? kickerBase + 20 : pad) + cap;
     lines.forEach((line, i) => svg.push(textPath(fonts.title, line, pad, firstBase + i * lineH, size, colors.text, tracking)));
-    if (job.icon) await placeIcon(rowTop + blockH / 2);
-    rowBottom = rowTop + blockH;
+    rowBottom = firstBase + (lines.length - 1) * lineH;
   }
 
-  // Description.
-  const footerTop = H - pad - 34;
+  // Description, directly under the title; it stops above the icon and the
+  // site wordmark.
   if (job.description) {
     const size = job.hero ? 27 : 34;
-    const lineH = Math.round(size * 1.42);
-    const top = rowBottom + 36;
-    const maxLines = Math.max(1, Math.floor((footerTop - 28 - top) / lineH));
+    const lineH = Math.round(size * 1.38);
+    const top = rowBottom + 22;
+    const limit = bottom - Math.max(iconBox, 34) - 24;
+    const maxLines = Math.max(1, Math.floor((limit - top) / lineH));
     // One line more than the short summary needs, filled from the longer text.
     const want = job.descriptionShort ? wrap(fonts.text, job.descriptionShort, size, colW, 6).length + 1 : 6;
     const lines = wrap(fonts.text, job.description, size, colW, Math.min(maxLines, want));
     lines.forEach((line, i) => svg.push(textPath(fonts.text, line, pad, top + size + i * lineH, size, colors.text)));
+  }
+
+  if (job.icon) {
+    const icon = await iconLayer(sharp, job.icon, job.iconKind, job.iconShape, iconBox);
+    layers.push({ input: icon.input, left: Math.round(pad + colW - iconBox + icon.offset), top: Math.round(bottom - iconBox + icon.offset) });
   }
 
   // The site's wordmark, bottom left.
