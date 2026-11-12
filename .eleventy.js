@@ -131,7 +131,8 @@ module.exports = function (eleventyConfig) {
     } else if (siteUrl && isEntry) {
       const macIcon = local(ctx.icon_macos);
       const squareIcon = local(ctx.icon);
-      const category = site.categories?.length > 1 && ctx.category ? [ctx.category] : [];
+      // "product" is the default kind of entry and says nothing on a card.
+      const category = site.categories?.length > 1 && ctx.category && ctx.category !== "product" ? [ctx.category] : [];
       const file = linkPreview.xCardJob({
         name: page.fileSlug,
         title: ctx.title,

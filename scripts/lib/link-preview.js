@@ -14,7 +14,7 @@ const xCard = require("./x-card");
 
 // Bump when the rendering changes, so every image gets a new URL and the
 // platforms that cache previews by image URL fetch the new one.
-const VERSION = 5;
+const VERSION = 6;
 
 const CARD = { width: 1200, height: 630 };
 const ICON_SIZE = 180;

@@ -139,7 +139,7 @@ async function renderXCard(sharp, job) {
   const layers = [];
   const svg = [];
   const pad = 64;
-  const split = job.hero ? 620 : W; // the hero panel takes the right side
+  const split = job.hero ? W - H : W; // the hero panel: a 630×630 square on the right
   const colW = job.hero ? split - pad - 56 : 940;
 
   // Hero panel.
@@ -159,9 +159,7 @@ async function renderXCard(sharp, job) {
     svg.push(textPath(fonts.label, kicker, pad, y, size, colors.muted, 0.1));
   }
 
-  // Kicker, title (or wordmark) and description stack tightly from the top;
-  // the icon sits bottom right of the text column, its bottom edge on the
-  // site wordmark's.
+  // Kicker, title (or wordmark) and description stack tightly from the top.
   const kickerBase = y;
   const iconBox = job.icon ? (job.hero ? 132 : 156) : 0;
   const bottom = H - pad;
@@ -190,7 +188,7 @@ async function renderXCard(sharp, job) {
     const size = job.hero ? 27 : 34;
     const lineH = Math.round(size * 1.38);
     const top = rowBottom + 22;
-    const limit = bottom - Math.max(iconBox, 34) - 24;
+    const limit = bottom - (job.hero ? 34 : Math.max(iconBox, 34)) - 24;
     const maxLines = Math.max(1, Math.floor((limit - top) / lineH));
     // One line more than the short summary needs, filled from the longer text.
     const want = job.descriptionShort ? wrap(fonts.text, job.descriptionShort, size, colW, 6).length + 1 : 6;
@@ -200,7 +198,10 @@ async function renderXCard(sharp, job) {
 
   if (job.icon) {
     const icon = await iconLayer(sharp, job.icon, job.iconKind, job.iconShape, iconBox);
-    layers.push({ input: icon.input, left: Math.round(pad + colW - iconBox + icon.offset), top: Math.round(bottom - iconBox + icon.offset) });
+    // Bottom right of the preview square (of the text column when there is
+    // no hero), its bottom edge on the site wordmark's.
+    const right = job.hero ? W - pad : pad + colW;
+    layers.push({ input: icon.input, left: Math.round(right - iconBox + icon.offset), top: Math.round(bottom - iconBox + icon.offset) });
   }
 
   // The site's wordmark, bottom left.
