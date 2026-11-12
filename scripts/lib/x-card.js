@@ -103,6 +103,36 @@ function squirclePath(size) {
   return `M${pts.map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join("L")}Z`;
 }
 
+// Material-style elevation under a masked icon: a tight key shadow offset
+// down and a wider, fainter ambient one, both cast from the icon's own alpha.
+// Values scale with the icon (set for a 132 px icon, Material elevation 3).
+const ICON_SHADOWS = [
+  { dy: 0.03, sigma: 0.025, opacity: 0.3 }, // key
+  { dy: 0.06, sigma: 0.07, opacity: 0.15 }, // ambient
+];
+async function shadowLayers(sharp, png, size, left, top) {
+  const out = [];
+  for (const { dy, sigma, opacity } of ICON_SHADOWS) {
+    const s = Math.max(0.3, sigma * size);
+    const pad = Math.ceil(s * 3);
+    const alpha = await sharp(png)
+      .ensureAlpha()
+      .extractChannel(3)
+      .linear(opacity, 0)
+      .extend({ top: pad, bottom: pad, left: pad, right: pad, background: 0 })
+      .blur(s)
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    const { width: w, height: h } = alpha.info;
+    const input = await sharp({ create: { width: w, height: h, channels: 3, background: "#000000" } })
+      .joinChannel(alpha.data, { raw: { width: w, height: h, channels: 1 } })
+      .png()
+      .toBuffer();
+    out.push({ input, left: Math.round(left - pad), top: Math.round(top - pad + dy * size) });
+  }
+  return out;
+}
+
 async function iconLayer(sharp, file, kind, shape, box) {
   const svgOpts = /\.svg$/i.test(file) ? { density: 384 } : {};
   if (kind === "macos") {
@@ -201,7 +231,11 @@ async function renderXCard(sharp, job) {
     // Bottom right of the preview square (of the text column when there is
     // no hero), its bottom edge on the site wordmark's.
     const right = job.hero ? W - pad : pad + colW;
-    layers.push({ input: icon.input, left: Math.round(right - iconBox + icon.offset), top: Math.round(bottom - iconBox + icon.offset) });
+    const left = Math.round(right - iconBox + icon.offset);
+    const top = Math.round(bottom - iconBox + icon.offset);
+    // macOS icons carry their own drawn shadow; logo marks (shape none) get none.
+    if (job.iconKind !== "macos" && job.iconShape !== "none") layers.push(...(await shadowLayers(sharp, icon.input, iconBox, left, top)));
+    layers.push({ input: icon.input, left, top });
   }
 
   // The site's wordmark, bottom left.
