@@ -277,6 +277,19 @@ body:has(.index-hero) .site-header { display: none; }
   color: var(--muted);
 }
 
+/* Status beside the date: text colour only, no fill. Released reads as the
+   accent, beta as plain text, wip as the date's grey, retired fainter. */
+.entry-card__status {
+  margin-left: 0.6em;
+  font-size: 0.75rem;
+  font-variant-caps: all-small-caps;
+  letter-spacing: 0.04em;
+}
+.entry-card__status--released { color: var(--accent); }
+.entry-card__status--beta { color: var(--text); }
+.entry-card__status--wip { color: var(--muted); }
+.entry-card__status--retired { color: var(--muted); opacity: 0.6; }
+
 /* Tags: one line of small capitals above the title, on cards and entries. */
 .tag-line {
   list-style: none;

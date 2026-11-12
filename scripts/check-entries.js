@@ -118,6 +118,12 @@ async function checkEntry(file) {
   if (!date) errors.push("missing date");
   else if (!DATE.test(date)) errors.push(`date "${date}" isn't YYYY or YYYY-MM`);
 
+  if (data.status === undefined) {
+    warnings.push(`missing status (one of ${schema.STATUS_ORDER.join(", ")}); the index treats it as wip`);
+  } else if (!schema.STATUS_ORDER.includes(data.status)) {
+    errors.push(`status "${data.status}" isn't one of ${schema.STATUS_ORDER.join(", ")}`);
+  }
+
   if (data.category === undefined) {
     if (categoryIds.length > 1) errors.push(`missing category (one of ${categoryIds.join(", ")})`);
   } else if (!categoryIds.includes(data.category)) {

@@ -1,6 +1,7 @@
 ---
 title: Catalogue Raisonné
 date: 2026-06
+status: released
 category: tool
 tags:
   - web
@@ -10,7 +11,7 @@ media:
   - src: entry-page.png
     caption: Subpixel's page in Artifact's catalogue, its tags in small capitals above the icon and title and its images to the right of the text
     alt: A catalogue page with a small capitals line reading Web, Game, Multiplayer above the Subpixel icon and title, paragraphs of text below, and two pixel-art screenshots of island and plaza worlds to the right
-unconfirmed: [date]
+unconfirmed: [date, status]
 ---
 
 An entry in a Catalogue Raisonné site can be kept in the repo of the project it describes, in a hidden `.artifact/` folder, so that the description changes in the same commit as the work. An import script copies each folder into the catalogue through the GitHub CLI, which lets private repos take part, and it leaves a hand-written entry alone unless told to adopt it.

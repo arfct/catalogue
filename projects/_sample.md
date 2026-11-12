@@ -1,6 +1,8 @@
 ---
 title: Sample Project
 date: 2024-06                 # when it happened: first release, or first working version (YYYY-MM or YYYY)
+status: released              # released (live: a store, the web) | beta (TestFlight, early access) |
+                              #   wip (in progress, not yet shareable) | retired (no longer maintained or available)
 category: project             # one of `categories:` in catalogue.config.yml; optional with a single category
 tags: [print, identity]       # from tags.base.yml or tags.yml; see README "Tags"
 url: https://example.com      # the project's own page
