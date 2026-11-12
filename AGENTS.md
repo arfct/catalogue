@@ -46,6 +46,9 @@ returns HTTP 200, turning every mistyped URL into a soft 404.
   the `stack:` choice. Read it before doing anything stack-dependent.
 - `styles/main.css` is the theme; put per-site changes in `styles/custom.css`
   so template updates merge cleanly.
+- Tags come from `tags.base.yml` (template-owned; don't edit it in a site)
+  and the site's `tags.yml`. Before adding a tag, read README "Tags": it must
+  group two or more entries and describe the work, not the stack or license.
 - Don't commit, push, or deploy unless asked.
 
 ## Entries from other repos

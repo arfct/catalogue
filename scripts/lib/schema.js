@@ -2,6 +2,7 @@
 // and the importer so the three can't drift apart.
 
 const fs = require("fs");
+const path = require("path");
 const yaml = require("js-yaml");
 
 const CONFIG_FILE = "catalogue.config.yml";
@@ -48,12 +49,26 @@ function categories(config) {
   return list.map((c) => (typeof c === "string" ? { id: c, label: c[0].toUpperCase() + c.slice(1) } : c));
 }
 
-// `tags.yml` is optional: a list of tags, or a map of groups to lists.
-function tagVocabulary(file = "tags.yml") {
-  if (!fs.existsSync(file)) return null;
-  const data = yaml.load(fs.readFileSync(file, "utf8"));
-  const tags = Array.isArray(data) ? data : Object.values(data || {}).flat();
-  return new Set(tags.map(String));
+// The tags entries may use: the template's tags.base.yml plus the site's
+// optional tags.yml. Either file is a map of group to {tag: label}; tags.yml
+// may also be a plain list, or a map of groups to lists, and those tags show
+// as written. Returns Map<tag, {label, group}>.
+function readTagFile(file, tags) {
+  if (!fs.existsSync(file)) return;
+  const data = yaml.load(fs.readFileSync(file, "utf8")) || {};
+  const add = (tag, label, group) => tags.set(String(tag), { label: String(label ?? tag), group });
+  if (Array.isArray(data)) return data.forEach((tag) => add(tag, tag, null));
+  for (const [group, list] of Object.entries(data)) {
+    if (Array.isArray(list)) list.forEach((tag) => add(tag, tag, group));
+    else for (const [tag, label] of Object.entries(list || {})) add(tag, label, group);
+  }
+}
+
+function tagVocabulary({ base = path.join(__dirname, "../../tags.base.yml"), site = "tags.yml" } = {}) {
+  const tags = new Map();
+  readTagFile(base, tags);
+  if (site) readTagFile(site, tags);
+  return tags;
 }
 
 // `contributors.yml` is optional: a map of GitHub login to {name, url, ...}.

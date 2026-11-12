@@ -4,20 +4,19 @@ date: 2026-06
 category: tool
 tags:
   - web
-  - tools
-  - open-source
-url: https://arfct.github.io/catalogue/
 links:
   source: https://github.com/arfct/catalogue
 media:
   - src: entry-page.png
-    caption: Subpixel's entry in Artifact's own catalogue, imported from Subpixel's repo
-    alt: A catalogue page with the Subpixel icon and title, three paragraphs of text, and two pixel-art screenshots of island and plaza worlds
+    caption: Subpixel's page in Artifact's catalogue, its tags in small capitals above the icon and title and its images to the right of the text
+    alt: A catalogue page with a small capitals line reading Web, Game, Multiplayer above the Subpixel icon and title, paragraphs of text below, and two pixel-art screenshots of island and plaza worlds to the right
 unconfirmed: [date]
 ---
 
-One Markdown file per project: a title, a date, its images, a few paragraphs. Eleventy turns the folder of them into an index and a page for each entry, published to GitHub Pages or to Cloudflare with the images in R2. Any page prints to PDF.
+An entry in a Catalogue Raisonné site can be kept in the repo of the project it describes, in a hidden `.artifact/` folder, so that the description changes in the same commit as the work. An import script copies each folder into the catalogue through the GitHub CLI, which lets private repos take part, and it leaves a hand-written entry alone unless told to adopt it.
 
-An entry can also live in the repo of the thing it describes, in a hidden `.artifact/` folder, and the catalogue imports it from there, so the entry changes in the same pull request as the product. A checker flags placeholder images, guessed dates and dead links before anything is published. `AGENTS.md` walks a coding agent, and the person beside it, through setup.
+Catalogue Raisonné is the template such sites are forked from. Each project is one Markdown file with a title, a date, images and a few paragraphs; Eleventy builds the files into an index and a page for every entry, and a GitHub Action publishes the result to GitHub Pages. The README documents a second setup on Cloudflare, with the images in R2. Tags, set in small capitals above each title, come from a base list that a site can extend, and the checker rejects any other tag and warns about a subject tag that only one entry uses. A print stylesheet covers export to PDF.
 
-Artifact's catalogue is a fork. Eleventy and Node. 2026.
+The image shows Subpixel's page in Artifact's catalogue, one such fork.
+
+Eleventy, Node. 2026.

@@ -277,21 +277,31 @@ body:has(.index-hero) .site-header { display: none; }
   color: var(--muted);
 }
 
-.entry-card__tags {
+/* Tags: one line of small capitals above the title, on cards and entries. */
+.tag-line {
   list-style: none;
+  padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.375rem;
-  margin-top: 0.25rem;
+  font-size: 0.625rem;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
-.entry-card__tags li {
-  font-size: 0.75rem;
-  color: var(--muted);
-  border: 1px solid var(--border);
-  padding: 0.125rem 0.5rem;
-  border-radius: 99px;
+.tag-line li + li::before {
+  content: "\00B7";
+  display: inline-block;
+  width: 1.25em;
+  margin-left: -0.08em; /* the previous word's trailing letter-spacing */
+  text-align: center;
+  letter-spacing: 0;
 }
+
+.entry-card__meta .tag-line { margin-bottom: 0.25rem; }
+.entry__tags { margin-bottom: calc(var(--gap) * -1); }
 
 /* ─── Entry detail ───────────────────────────────────────────────────────── */
 .entry {
@@ -329,13 +339,6 @@ body:has(.index-hero) .site-header { display: none; }
 }
 
 .entry__meta dt { color: var(--muted); }
-
-.tag-list {
-  list-style: none;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-}
 
 .credit-list {
   list-style: none;

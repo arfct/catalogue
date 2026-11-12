@@ -27,18 +27,18 @@ permalink: "{{ site.catalog_path }}"
           </div>
         {% endif %}
         <div class="entry-card__meta">
+          {% if entry.data.tags %}
+            <ul class="tag-line">
+              {% for tag in entry.data.tags %}
+                <li>{{ tag | tagLabel }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
           <h2 class="entry-card__title">
             {% if entry.data.icon_macos %}<img class="entry-card__icon app-icon app-icon--macos" src="{{ entry.data.icon_macos | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% elif entry.data.icon %}<img class="entry-card__icon app-icon app-icon--{{ entry.data.icon_shape or 'squircle' }}" src="{{ entry.data.icon | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% endif %}
             {{ entry.data.title }}
           </h2>
           <p class="entry-card__date">{{ entry.data.date | entryDate }}</p>
-          {% if entry.data.tags %}
-            <ul class="entry-card__tags">
-              {% for tag in entry.data.tags %}
-                <li>{{ tag }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
         </div>
       </a>
     {% endfor %}

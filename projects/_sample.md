@@ -2,7 +2,7 @@
 title: Sample Project
 date: 2024-06                 # when it happened: first release, or first working version (YYYY-MM or YYYY)
 category: project             # one of `categories:` in catalogue.config.yml; optional with a single category
-tags: [design, identity]      # lowercase; from tags.yml if the site has one
+tags: [print, identity]       # from tags.base.yml or tags.yml; see README "Tags"
 url: https://example.com      # the project's own page
 links:                        # every public way to get it; keys listed in the README
   app_store: https://apps.apple.com/app/id000000000

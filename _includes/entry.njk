@@ -4,6 +4,13 @@ layout: layout.njk
 <article class="entry">
 
   <div class="entry__left">
+    {% if tags %}
+      <ul class="tag-line entry__tags">
+        {% for tag in tags %}
+          <li>{{ tag | tagLabel }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
     <header class="entry__header">
       {% if icon_macos %}
         <img class="entry__icon app-icon app-icon--macos" src="{{ icon_macos | mediaUrl }}" alt="" width="96" height="96">
@@ -52,16 +59,6 @@ layout: layout.njk
           <ul class="link-list">
             {% for link in getIt %}
               <li><a href="{{ link.url }}">{{ link.label }}</a></li>
-            {% endfor %}
-          </ul>
-        </dd>
-      {% endif %}
-      {% if tags %}
-        <dt>Tags</dt>
-        <dd>
-          <ul class="tag-list">
-            {% for tag in tags %}
-              <li>{{ tag }}</li>
             {% endfor %}
           </ul>
         </dd>

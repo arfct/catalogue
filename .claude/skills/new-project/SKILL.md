@@ -35,7 +35,7 @@ Create `projects/<slug>.md` — kebab-case slug; it becomes the URL `/p/<slug>/`
 - `url` is the project's own page. Every other public way to get it (store pages, a public beta, a public repo) goes in `links`, with the keys listed in the README.
 - `category`, if the site has more than one in `catalogue.config.yml`.
 - Anything you inferred and couldn't confirm goes in `unconfirmed` (e.g. `[date]`), so the checker keeps flagging it.
-- Tags: short, lowercase, kebab-case (`open-source`, not `open source`). Reuse tags from existing entries where they fit.
+- Tags: only those in `tags.base.yml` or the site's `tags.yml`; the checker errors on any other. Read README "Tags" for the groups and the rules (no stack or license tags such as `open-source`; a new tag must group two or more entries) before proposing one, and add it to `tags.yml` only with the user's agreement.
 - Credits: everyone else involved goes in `credits:` (name, optional role and url) — the entry should appreciate collaborators, not just the author. `role:` stays the author's own role. Credits live in frontmatter, not the body.
 - Body: 1–3 short paragraphs in the voice below.
 

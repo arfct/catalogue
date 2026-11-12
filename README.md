@@ -153,7 +153,7 @@ Each project is a Markdown file in `projects/` with YAML frontmatter.
 title: Project Title                 # required
 date: 2024-06                        # required: when it happened (YYYY-MM or YYYY)
 category: project                    # one of `categories:` in the config; optional with only one
-tags: [print, identity]              # optional; checked against tags.yml if the site has one
+tags: [print, identity]              # optional; from tags.base.yml or tags.yml (see Tags)
 url: https://my-project.example      # optional: the project's own page, shown as Link
 links:                               # optional: every public way to get it, shown as "Get it"
   app_store: https://apps.apple.com/app/id000000000
@@ -226,6 +226,43 @@ pointing at the wrong site, missing images, oversized files and non-square
 icons. `npm run check -- --remote` also fetches every link and image, and
 `--report` prints a table. Guesses listed in `unconfirmed` show up as warnings
 until you remove them.
+
+---
+
+## Tags
+
+Tags show as one line of small capitals above each entry's title. An entry may
+use the base tags in `tags.base.yml` and any the site adds in `tags.yml`; the
+checker errors on anything else.
+
+The base tags come in three groups:
+
+- **platform:** where it runs or what it's made in (`web`, `ios`, `android`,
+  `wear-os`, `pebble`, `browser-extension`, `hardware`, `print`…). Tag every
+  platform an entry ships on.
+- **form:** what kind of thing it is, where the category doesn't say it
+  (`game`, `widget`, `watchface`).
+- **subject:** what it's about (`time`, `writing`, `multiplayer`, `design`…).
+
+To add a tag, put it in `tags.yml` under one of those groups, with the label
+pages show:
+
+```yaml
+subject:
+  music: Music
+```
+
+The rules for a new tag:
+
+- It groups two or more entries. A tag that only one entry uses says nothing a
+  visitor can browse by; put that detail in the entry's text. The checker warns
+  about subject tags and site tags used only once.
+- It describes the work, not how it's built or licensed: no `react`,
+  `swift`, `open-source`. A source link already says the code is public.
+- It doesn't repeat the category: an entry in Tools doesn't need `tool`.
+- Lowercase and hyphenated (`wear-os`), singular (`game`, not `games`).
+- A platform belongs in the base list; propose it upstream in
+  arfct/catalogue rather than only in a site's `tags.yml`.
 
 ---
 
@@ -390,7 +427,8 @@ URLs.
 ```
 catalogue.config.yml   ← your name, settings, stack choice
 projects/              ← one .md file per project (_sample.md is the reference)
-tags.yml               ← optional: the tags entries may use
+tags.base.yml          ← the template's base tags (don't edit; it updates with the template)
+tags.yml               ← optional: the site's own tags, added by the rules under Tags
 contributors.yml       ← optional: names and links for credited GitHub logins
 pages/                 ← standalone pages (_sample.md is the reference; 404.njk)
 media/                 ← images (committed, synced to R2 or served directly)
