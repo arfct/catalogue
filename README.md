@@ -250,6 +250,8 @@ The rules for a new tag:
 - A platform belongs in the base list; propose it upstream in
   arfct/catalogue rather than only in a site's `tags.yml`.
 
+---
+
 ## Entries from other repos
 
 A project can keep its entry in its own repo, so the description changes in
