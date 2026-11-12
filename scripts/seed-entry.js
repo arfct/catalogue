@@ -15,7 +15,7 @@ const path = require("path");
 const yaml = require("js-yaml");
 const schema = require("./lib/schema");
 
-const IMPORT_FIELDS = ["source", "source_commit", "icon"];
+const IMPORT_FIELDS = ["source", "source_commit", "icon", "icon_macos", "wordmark"];
 
 async function readMedia(src, mediaBase) {
   const local = path.join("media", src);
@@ -58,6 +58,21 @@ async function main() {
     const iconName = `icon${path.extname(data.icon)}`;
     fs.writeFileSync(path.join(folder, iconName), await readMedia(data.icon, mediaBase));
     copied.push(iconName);
+  }
+  if (data.icon_macos) {
+    fs.writeFileSync(path.join(folder, "icon-macos.png"), await readMedia(data.icon_macos, mediaBase));
+    copied.push("icon-macos.png");
+  }
+  if (data.wordmark) {
+    const name = `wordmark${path.extname(data.wordmark)}`;
+    fs.writeFileSync(path.join(folder, name), await readMedia(data.wordmark, mediaBase));
+    copied.push(name);
+  }
+  if (data.og_image && !/^https?:\/\//.test(data.og_image)) {
+    const name = path.basename(data.og_image);
+    fs.writeFileSync(path.join(folder, name), await readMedia(data.og_image, mediaBase));
+    copied.push(name);
+    data.og_image = name;
   }
 
   for (const field of IMPORT_FIELDS) delete data[field];

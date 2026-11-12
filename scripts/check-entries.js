@@ -81,6 +81,16 @@ async function checkMedia(src, { errors, warnings }, label) {
   return null;
 }
 
+// True when any corner pixel of an image is fully opaque.
+async function opaqueCorners(file) {
+  const sharp = require("sharp");
+  const { data, info } = await sharp(file).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+  const at = (x, y) => data[(y * info.width + x) * info.channels + info.channels - 1];
+  const w = info.width - 1;
+  const h = info.height - 1;
+  return [at(0, 0), at(w, 0), at(0, h), at(w, h)].some((alpha) => alpha === 255);
+}
+
 function hostOf(url) {
   try {
     return new URL(url).hostname;
@@ -160,6 +170,37 @@ async function checkEntry(file) {
     }
   }
 
+  // The link-preview image: the entry's own when it names one, else the build
+  // derives one from the first image.
+  if (!data.og_image) {
+    warnings.push("no og_image; the build composes the 1200×630 X card from the entry's assets");
+  } else {
+    const src = String(data.og_image);
+    const { width, height, maxBytes } = schema.OG_IMAGE;
+    const file = localMediaPath(src);
+    if (/^https?:\/\//.test(src)) {
+      errors.push(`og_image ${src} must be a file beside the entry, not a URL`);
+    } else if (!fs.existsSync(file)) {
+      errors.push(`og_image ${src} doesn't exist`);
+    } else {
+      const bytes = fs.readFileSync(file);
+      const size = schema.imageSize(bytes);
+      if (!size) errors.push(`og_image ${src} isn't a PNG or JPEG`);
+      else if (size.width !== width || size.height !== height) {
+        errors.push(`og_image ${src} is ${size.width}×${size.height}; it must be ${width}×${height}`);
+      }
+      if (bytes.length > maxBytes) {
+        warnings.push(`og_image ${src} is ${Math.round(bytes.length / 1024)} KB; keep it under 600 KB (WhatsApp skips larger ones)`);
+      }
+    }
+  }
+
+  const wordmarkSrc = sourceFolder
+    ? schema.WORDMARK_FILES(slug).find((f) => fs.existsSync(path.join(sourceFolder, f)))
+    : data.wordmark;
+  if (wordmarkSrc && !/\.svg$/i.test(wordmarkSrc)) await checkMedia(String(wordmarkSrc), problems, "wordmark");
+  else if (wordmarkSrc && !fs.existsSync(localMediaPath(String(wordmarkSrc)))) errors.push(`wordmark ${wordmarkSrc} doesn't exist`);
+
   const iconSrc = sourceFolder ? schema.ICON_FILES(slug).find((f) => fs.existsSync(path.join(sourceFolder, f))) : data.icon;
   if (data.icon_shape !== undefined && !schema.ICON_SHAPES.includes(data.icon_shape)) {
     errors.push(`icon_shape "${data.icon_shape}" isn't one of ${schema.ICON_SHAPES.join(", ")}`);
@@ -171,6 +212,22 @@ async function checkEntry(file) {
       else if (size.width < 512) warnings.push(`icon is ${size.width}px; use 1024 (512 minimum)`);
       if (size.alpha && (data.icon_shape || "squircle") !== "none") {
         warnings.push("icon has an alpha channel; the site masks it, so supply opaque, unmasked art");
+      }
+    }
+  }
+
+  const macSrc = sourceFolder
+    ? schema.ICON_MACOS_FILES(slug).find((f) => fs.existsSync(path.join(sourceFolder, f)))
+    : data.icon_macos;
+  if (macSrc) {
+    const size = await checkMedia(String(macSrc), problems, "icon-macos");
+    if (size) {
+      if (size.width !== size.height) errors.push(`icon-macos is ${size.width}×${size.height}; it must be square`);
+      else if (size.width < 512) errors.push(`icon-macos is ${size.width}px; use 1024 (512 minimum)`);
+      else if (size.width !== 1024) warnings.push(`icon-macos is ${size.width}px; use 1024`);
+      if (!size.alpha) errors.push("icon-macos has no alpha channel; it needs a transparent background around the drawn shape");
+      else if (await opaqueCorners(localMediaPath(String(macSrc)))) {
+        errors.push("icon-macos has opaque corners; draw the shape, margin and shadow on a transparent background (the macOS icon grid)");
       }
     }
   }

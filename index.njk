@@ -28,7 +28,7 @@ permalink: "{{ site.catalog_path }}"
         {% endif %}
         <div class="entry-card__meta">
           <h2 class="entry-card__title">
-            {% if entry.data.icon %}<img class="entry-card__icon app-icon app-icon--{{ entry.data.icon_shape or 'squircle' }}" src="{{ entry.data.icon | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% endif %}
+            {% if entry.data.icon_macos %}<img class="entry-card__icon app-icon app-icon--macos" src="{{ entry.data.icon_macos | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% elif entry.data.icon %}<img class="entry-card__icon app-icon app-icon--{{ entry.data.icon_shape or 'squircle' }}" src="{{ entry.data.icon | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% endif %}
             {{ entry.data.title }}
           </h2>
           <p class="entry-card__date">{{ entry.data.date | entryDate }}</p>

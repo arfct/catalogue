@@ -96,7 +96,7 @@ function parseEntry(text) {
 // The order fields are written in, matching projects/_sample.md. Anything else
 // follows, in the order the author wrote it.
 const FIELD_ORDER = [
-  "title", "date", "category", "tags", "url", "links", "media", "media_type", "icon", "icon_shape",
+  "title", "date", "category", "tags", "url", "links", "media", "media_type", "og_image", "icon", "icon_macos", "icon_shape", "wordmark",
   "client", "role", "credits", "formerly", "unconfirmed", "source", "source_commit",
 ];
 
@@ -128,13 +128,24 @@ function imageSize(buffer) {
   return null;
 }
 
+// An entry's own link-preview image (`og_image`) must be exactly this size.
+const OG_IMAGE = { width: 1200, height: 630, maxBytes: 600 * 1024 };
+
 const ICON_FILES = (slug) => [`${slug}.icon.png`, `${slug}.icon.svg`, "icon.png", "icon.svg"];
+// A macOS-style icon: 1024 square, transparent, with the shape, margin and
+// shadow of Apple's icon grid already drawn. Shown as is, never masked.
+// An entry's wordmark, set in place of its title on the composed X card.
+const WORDMARK_FILES = (slug) => [`${slug}.wordmark.svg`, `${slug}.wordmark.png`, "wordmark.svg", "wordmark.png"];
+const ICON_MACOS_FILES = (slug) => [`${slug}.icon-macos.png`, "icon-macos.png"];
 
 module.exports = {
   BUILTIN_LINK_KINDS,
   STORE_TAGS,
   ICON_SHAPES,
   ICON_FILES,
+  ICON_MACOS_FILES,
+  WORDMARK_FILES,
+  OG_IMAGE,
   loadConfig,
   linkKinds,
   categories,

@@ -5,7 +5,9 @@ layout: layout.njk
 
   <div class="entry__left">
     <header class="entry__header">
-      {% if icon %}
+      {% if icon_macos %}
+        <img class="entry__icon app-icon app-icon--macos" src="{{ icon_macos | mediaUrl }}" alt="" width="96" height="96">
+      {% elif icon %}
         <img class="entry__icon app-icon app-icon--{{ icon_shape or 'squircle' }}" src="{{ icon | mediaUrl }}" alt="" width="96" height="96">
       {% endif %}
       <h1 class="entry__title">{{ title }}</h1>

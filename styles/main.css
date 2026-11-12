@@ -175,6 +175,8 @@ main {
 }
 .app-icon--circle { border-radius: 50%; }
 .app-icon--none { object-fit: contain; }
+/* A macOS-style icon carries its own shape, margin and shadow: never masked. */
+.app-icon--macos { object-fit: contain; }
 
 .entry__header {
   display: flex;
