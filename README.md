@@ -254,8 +254,8 @@ JPEG under 600 KB (WhatsApp skips larger ones).
 
 **X gets its own card.** X shows a large card as the image alone, with no title
 or description beneath, so the build composes one for it from the entry: the
-category and tags line, the icon (`icon_macos` as is, else `icon` masked) beside
-the title or the entry's `wordmark`, the description, the first image, and the
+category and tags line, the title or the entry's `wordmark` with the icon to its
+right (`icon_macos` as is, else `icon` masked), the description, the first image, and the
 site's `wordmark` (else its title). Text is set from font files
 (`preview.fonts`, default Inter), so it renders the same everywhere. An entry's
 own `og_image` (exactly 1200×630) replaces the composed card.

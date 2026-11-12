@@ -159,31 +159,45 @@ async function renderXCard(sharp, job) {
     svg.push(textPath(fonts.label, kicker, pad, y, size, colors.muted, 0.1));
   }
 
-  // Icon and title (or wordmark) on one row.
+  // Title (or wordmark) with the icon to its right, on the same line, centred
+  // on the title's cap height, 0.4em after it. A long title wraps before the
+  // icon, which stays beside the last line.
   const rowTop = job.kicker ? 132 : 88;
-  const iconBox = 96;
-  let textX = pad;
-  if (job.icon) {
-    const icon = await iconLayer(sharp, job.icon, job.iconKind, job.iconShape, iconBox);
-    layers.push({ input: icon.input, left: pad + icon.offset, top: rowTop + icon.offset });
-    textX = pad + iconBox + 28;
-  }
-  const titleW = pad + colW - textX;
-  let rowBottom = rowTop + (job.icon ? iconBox : 0);
+  let rowBottom = rowTop;
+  const placeIcon = async (x, centreY, box) => {
+    const icon = await iconLayer(sharp, job.icon, job.iconKind, job.iconShape, box);
+    layers.push({ input: icon.input, left: Math.round(x + icon.offset), top: Math.round(centreY - box / 2 + icon.offset) });
+  };
   if (job.wordmark) {
-    const mark = await fitted(sharp, job.wordmark, titleW, job.icon ? iconBox * 0.8 : 110);
-    const top = job.icon ? rowTop + Math.round((iconBox - mark.h) / 2) : rowTop;
-    layers.push({ input: mark.input, left: textX, top });
-    rowBottom = Math.max(rowBottom, top + mark.h);
+    const markH = 88;
+    const iconBox = job.icon ? 76 : 0;
+    const gap = job.icon ? 28 : 0;
+    const mark = await fitted(sharp, job.wordmark, colW - iconBox - gap, markH);
+    layers.push({ input: mark.input, left: pad, top: rowTop });
+    if (job.icon) await placeIcon(pad + mark.w + gap, rowTop + mark.h / 2, iconBox);
+    rowBottom = rowTop + Math.max(mark.h, iconBox);
   } else {
+    const tracking = -0.01;
+    const capRatio = (fonts.title.tables.os2?.sCapHeight || fonts.title.unitsPerEm * 0.72) / fonts.title.unitsPerEm;
+    const fit = (size) => {
+      const iconBox = job.icon ? Math.round(size * 1.1) : 0;
+      const gap = job.icon ? size * 0.4 : 0;
+      return { iconBox, gap, room: colW - iconBox - gap };
+    };
     let size = job.hero ? 64 : 84;
-    while (size > 40 && width(fonts.title, job.title, size) > titleW) size -= 2;
-    const lines = width(fonts.title, job.title, size) > titleW ? wrap(fonts.title, job.title, size, titleW, 2) : [job.title];
+    while (size > 40 && width(fonts.title, job.title, size, tracking) > fit(size).room) size -= 2;
+    const { iconBox, gap, room } = fit(size);
+    const lines = width(fonts.title, job.title, size, tracking) > room ? wrap(fonts.title, job.title, size, room, 2) : [job.title];
     const lineH = size * 1.12;
-    const block = lineH * (lines.length - 1) + size * 0.72; // cap height to baseline
-    const base = job.icon ? rowTop + (iconBox - block) / 2 + size * 0.72 : rowTop + size * 0.8;
-    lines.forEach((line, i) => svg.push(textPath(fonts.title, line, textX, base + i * lineH, size, colors.text, -0.01)));
-    rowBottom = Math.max(rowBottom, base + (lines.length - 1) * lineH + size * 0.25);
+    const cap = size * capRatio;
+    const firstBase = rowTop + Math.max(cap, (iconBox + cap) / 2);
+    lines.forEach((line, i) => svg.push(textPath(fonts.title, line, pad, firstBase + i * lineH, size, colors.text, tracking)));
+    const lastBase = firstBase + (lines.length - 1) * lineH;
+    if (job.icon) {
+      const lastW = width(fonts.title, lines[lines.length - 1], size, tracking);
+      await placeIcon(pad + lastW + gap, lastBase - cap / 2, iconBox);
+    }
+    rowBottom = Math.max(lastBase + size * 0.25, lastBase - cap / 2 + iconBox / 2);
   }
 
   // Description.
