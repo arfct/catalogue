@@ -16,7 +16,7 @@ accent_color: "#1a1a1a"
 #   background: "#f2f2f2"     # behind letterboxed images in generated 1200×630 cards
 #   icon_background: "#ffffff" # behind icons; iOS shows transparency as black
 #   image: img/card.png       # the card for the index and pages; default: generated
-#                             # from the icon and the title
+#                             # from the icon, the wordmark (or title) and the description
 #   image_alt: Your Name's catalogue
 #   post_layout: true         # iMessage's post layout (description, icon beside image)
 #   fonts:                    # for the composed X cards: font files or package paths

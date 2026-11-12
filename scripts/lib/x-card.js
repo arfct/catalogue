@@ -140,7 +140,7 @@ async function renderXCard(sharp, job) {
   const svg = [];
   const pad = 64;
   const split = job.hero ? 620 : W; // the hero panel takes the right side
-  const colW = split - pad - (job.hero ? 56 : pad);
+  const colW = job.hero ? split - pad - 56 : 940;
 
   // Hero panel.
   if (job.hero) {
@@ -176,7 +176,7 @@ async function renderXCard(sharp, job) {
     layers.push({ input: mark.input, left: textX, top });
     rowBottom = Math.max(rowBottom, top + mark.h);
   } else {
-    let size = 64;
+    let size = job.hero ? 64 : 84;
     while (size > 40 && width(fonts.title, job.title, size) > titleW) size -= 2;
     const lines = width(fonts.title, job.title, size) > titleW ? wrap(fonts.title, job.title, size, titleW, 2) : [job.title];
     const lineH = size * 1.12;
@@ -189,8 +189,8 @@ async function renderXCard(sharp, job) {
   // Description.
   const footerTop = H - pad - 34;
   if (job.description) {
-    const size = 27;
-    const lineH = 39;
+    const size = job.hero ? 27 : 34;
+    const lineH = Math.round(size * 1.42);
     const top = rowBottom + 40;
     const maxLines = Math.max(1, Math.floor((footerTop - 28 - top) / lineH));
     const lines = wrap(fonts.text, job.description, size, colW, Math.min(maxLines, 6));
@@ -209,4 +209,40 @@ async function renderXCard(sharp, job) {
   return sharp(Buffer.from(base)).composite(layers).png().toBuffer();
 }
 
-module.exports = { renderXCard, resolveFont, DEFAULT_FONTS, wrap, loadFont, squirclePath, escapeXml };
+// The card for the index and pages: the site's icon, its wordmark (else its
+// title) and its description, centred on white.
+async function renderSiteCard(sharp, job) {
+  const colors = { background: "#ffffff", text: "#1a1a1a", muted: "#767676", ...(job.colors || {}) };
+  const fonts = {};
+  for (const role of ["title", "text"]) fonts[role] = loadFont(job.fonts[role]);
+  const layers = [];
+  const svg = [];
+  const iconSize = job.icon ? 168 : 0;
+  const descSize = 30;
+  const lineH = 42;
+  const lines = job.description ? wrap(fonts.text, job.description, descSize, 880, 2) : [];
+  const markH = job.wordmark ? 76 : 72;
+  const gap = 36;
+  const total = iconSize + (iconSize ? gap : 0) + markH + (lines.length ? gap + lineH * lines.length : 0);
+  let y = Math.round((H - total) / 2);
+  if (job.icon) {
+    const icon = await fitted(sharp, job.icon, iconSize, iconSize);
+    layers.push({ input: icon.input, left: Math.round((W - icon.w) / 2), top: y });
+    y += iconSize + gap;
+  }
+  if (job.wordmark) {
+    const mark = await fitted(sharp, job.wordmark, 560, markH);
+    layers.push({ input: mark.input, left: Math.round((W - mark.w) / 2), top: y + Math.round((markH - mark.h) / 2) });
+  } else {
+    const size = 64;
+    svg.push(textPath(fonts.title, job.title, (W - width(fonts.title, job.title, size)) / 2, y + size * 0.85, size, colors.text));
+  }
+  y += markH + gap;
+  lines.forEach((line, i) => {
+    svg.push(textPath(fonts.text, line, (W - width(fonts.text, line, descSize)) / 2, y + descSize + i * lineH, descSize, colors.muted));
+  });
+  const base = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><rect width="${W}" height="${H}" fill="${colors.background}"/>${svg.join("")}</svg>`;
+  return sharp(Buffer.from(base)).composite(layers).png().toBuffer();
+}
+
+module.exports = { renderXCard, renderSiteCard, resolveFont, DEFAULT_FONTS, wrap, loadFont, squirclePath, escapeXml };

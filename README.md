@@ -240,7 +240,7 @@ in `catalogue.config.yml`, since crawlers want absolute URLs.
 |---|---|---|
 | `og:title` | the entry's title | the page title, else the site title |
 | `og:description`, `description` | `summary`, else the body's first sentence(s), at most 200 characters, one line | the page's `description`, else the site's |
-| `og:image` (+ `:width`, `:height`, `:type`, `:alt`) | the first image fitted to 1200×630 on `preview.background`, nothing added | the site card: `preview.image`, else the icon and title |
+| `og:image` (+ `:width`, `:height`, `:type`, `:alt`) | the first image fitted to 1200×630 on `preview.background`, nothing added | the site card: `preview.image`, else the site's icon, `wordmark` (or title) and description |
 | `twitter:image` | X only: the composed card, or `og_image` | none (X falls back to `og:image`) |
 | `og:url`, `rel=canonical` | the page's URL (none on the 404 page) | same |
 | `icon`, `apple-touch-icon` | 180 px from `icon`, else `icon_macos`, else the site's | the site's `icon` |

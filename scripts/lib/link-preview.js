@@ -14,7 +14,7 @@ const xCard = require("./x-card");
 
 // Bump when the rendering changes, so every image gets a new URL and the
 // platforms that cache previews by image URL fetch the new one.
-const VERSION = 1;
+const VERSION = 2;
 
 const CARD = { width: 1200, height: 630 };
 const ICON_SIZE = 180;
@@ -105,21 +105,30 @@ function register(kind, name, inputs, ext) {
   return file;
 }
 
-// A 1200×630 card from a local image, or from the icon and title when the
-// page has no image of its own.
-function cardJob({ name, image, icon, title, background }) {
+// A 1200×630 card from a local image, or, for pages with no image of their
+// own, the site card: icon, wordmark or title, and description.
+function cardJob({ name, image, icon, title, wordmark, description, fonts, colors, background }) {
   if (image) return register("image", name, { files: [image], background }, "jpg");
-  return register("site", name, { files: icon ? [icon] : [], icon, title, background }, "jpg");
+  const fontFiles = resolveFonts(fonts);
+  if (!fontFiles) return null;
+  const files = [icon, wordmark, ...Object.values(fontFiles)].filter(Boolean);
+  return register("site", name, { files, icon, title, wordmark, description, fonts: fontFiles, colors }, "jpg");
+}
+
+function resolveFonts(fonts) {
+  const out = {};
+  for (const [role, spec] of Object.entries({ ...xCard.DEFAULT_FONTS, ...(fonts || {}) })) {
+    out[role] = xCard.resolveFont(spec);
+    if (!out[role]) return null;
+  }
+  return out;
 }
 
 // The composed card for X: title or wordmark, description, icon, hero, the
 // category and tags line, and the site's wordmark (see x-card.js).
 function xCardJob({ name, title, wordmark, description, icon, iconKind, iconShape, hero, kicker, siteWordmark, siteTitle, fonts, colors }) {
-  const fontFiles = {};
-  for (const [role, spec] of Object.entries({ ...xCard.DEFAULT_FONTS, ...(fonts || {}) })) {
-    fontFiles[role] = xCard.resolveFont(spec);
-    if (!fontFiles[role]) return null;
-  }
+  const fontFiles = resolveFonts(fonts);
+  if (!fontFiles) return null;
   const files = [hero, icon, wordmark, siteWordmark, ...Object.values(fontFiles)].filter(Boolean);
   return register(
     "x",
@@ -137,9 +146,6 @@ function iconJob({ name, icon, background, inset = 0 }) {
 }
 
 // ─── Rendering ───────────────────────────────────────────────────────────────
-
-const escapeXml = (s) =>
-  String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]);
 
 function load(sharp, file) {
   return sharp(file, /\.svg$/i.test(file) ? { density: 384 } : {});
@@ -177,27 +183,6 @@ async function renderImageCard(sharp, job) {
   return encodeCard(sharp(await card.png().toBuffer()));
 }
 
-async function renderSiteCard(sharp, job) {
-  const { width: W, height: H } = CARD;
-  const layers = [];
-  const iconSize = 200;
-  const hasIcon = job.files.length > 0;
-  if (hasIcon) {
-    const icon = await load(sharp, job.files[0]).resize(iconSize, iconSize, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toBuffer();
-    layers.push({ input: icon, left: (W - iconSize) / 2, top: job.title ? 150 : (H - iconSize) / 2 });
-  }
-  if (job.title) {
-    const y = hasIcon ? 460 : H / 2;
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
-      <text x="${W / 2}" y="${y}" text-anchor="middle" dominant-baseline="middle"
-        font-family="Helvetica Neue, Helvetica, Arial, Liberation Sans, DejaVu Sans, sans-serif"
-        font-size="64" font-weight="600" fill="#1a1a1a">${escapeXml(job.title)}</text></svg>`;
-    layers.push({ input: Buffer.from(svg), left: 0, top: 0 });
-  }
-  const card = sharp({ create: { width: W, height: H, channels: 3, background: job.background } }).composite(layers);
-  return encodeCard(sharp(await card.png().toBuffer()));
-}
-
 async function renderIcon(sharp, job) {
   const inner = Math.round(ICON_SIZE * (1 - 2 * job.inset));
   const art = await load(sharp, job.files[0])
@@ -214,7 +199,7 @@ async function renderIcon(sharp, job) {
 
 async function renderJob(sharp, job) {
   if (job.kind === "image") return renderImageCard(sharp, job);
-  if (job.kind === "site") return renderSiteCard(sharp, job);
+  if (job.kind === "site") return encodeCard(sharp(await xCard.renderSiteCard(sharp, job)));
   if (job.kind === "x") return encodeCard(sharp(await xCard.renderXCard(sharp, job)));
   return renderIcon(sharp, job);
 }

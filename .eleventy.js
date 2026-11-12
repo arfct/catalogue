@@ -102,7 +102,15 @@ module.exports = function (eleventyConfig) {
         : {
             file: preview.image && fs.existsSync(preview.image)
               ? linkPreview.cardJob({ name: "site", image: preview.image, background })
-              : linkPreview.cardJob({ name: "site", icon: siteIcon, title: site.title, background }),
+              : linkPreview.cardJob({
+                  name: "site",
+                  icon: siteIcon,
+                  title: site.title,
+                  wordmark: site.wordmark && fs.existsSync(site.wordmark) ? site.wordmark : null,
+                  description: linkPreview.summarize(site.description || "", 160),
+                  fonts: preview.fonts,
+                  colors: preview.colors,
+                }),
             alt: preview.image_alt || site.title,
           };
       card = card.file ? { ...card, url: absolute(card.file), ...linkPreview.CARD, type: "image/jpeg" } : null;
