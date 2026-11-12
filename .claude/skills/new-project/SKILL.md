@@ -9,7 +9,7 @@ Write an entry plus its media, matching the site's existing conventions exactly.
 
 **Where it goes:**
 
-- **A project with its own repo the user controls**: write the entry into that repo's `.artifact/` folder (`source_dir` in `catalogue.config.yml`) as `<slug>.md` with bare image names, its images and an optional `icon.png` beside it, plus a two-line `README.md` saying the folder is a catalogue entry, not build output. Check it with `npm run check -- --dir <repo>/.artifact`. Then add the repo to `sources:` and run `npm run import`. The entry is committed in that repo; the import is committed here.
+- **A project with its own repo the user controls**: write the entry into that repo's `.artifact/` folder (`source_dir` in `catalogue.config.yml`) as `<slug>.md` with bare image names, its images and the optional named files beside it (`icon.png`, `icon-macos.png`, `wordmark.svg`; README "Entries from other repos"), plus a two-line `README.md` saying the folder is a catalogue entry, not build output. Check it with `npm run check -- --dir <repo>/.artifact`. Then add the repo to `sources:` and run `npm run import`. The entry is committed in that repo; the import is committed here.
 - **Anything else** (no repo, or a repo the user doesn't control): `projects/<slug>.md` plus `media/<slug>/`, as below.
 
 ## Ground truth
@@ -64,7 +64,20 @@ Stack determines where media must go (`catalogue.config.yml`):
 - `github-pages` — files in `media/` are served directly; adding them is enough.
 - `cloudflare` — media is served from R2, not the repo. After adding files to `media/`, run `npm run sync` or the images will 404 in production.
 
-An app icon, if the project has one, is the square unmasked art (1024px), never a `media` item: `icon:` in `projects/`, or `icon.png` by name in `.artifact/`.
+An app icon, if the project has one, is never a `media` item. Two kinds, either alone is enough (README "Entry format", Icons):
+
+- `icon` — the square, opaque, unmasked art (1024px); the site applies the shape. `icon:` in `projects/`, or `icon.png` by name in `.artifact/`.
+- `icon_macos` — a macOS-style icon: transparent 1024 canvas with the shape, margin and shadow drawn in. Shown as is, never masked. `icon_macos:` in `projects/`, or `icon-macos.png` by name in `.artifact/`. Use it for a Mac app's own icon rather than cropping one out of it.
+
+### Link previews
+
+Pasted links get a card (README "Link previews"). Three optional fields shape it:
+
+- `summary` — one sentence for the preview description (at most 300 characters). Without it the body's first sentence(s) are used, so only add one when the opening sentence reads badly out of context.
+- `wordmark` — the project's wordmark (SVG or PNG), set in place of the title on the card X shows. `wordmark.svg` by name in `.artifact/`.
+- `og_image` — the entry's own 1200×630 card for X. Leave it out: the build composes the card from the title, description, icon and first image, and that is the default. Only add one the user supplies.
+
+The first image matters most: it becomes `og:image` (fitted to 1200×630) and the right half of the X card, so lead with the clearest picture of the thing.
 
 ## 4. Verify
 

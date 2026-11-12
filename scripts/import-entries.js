@@ -3,7 +3,7 @@
 //
 // Each repo listed under `sources:` in catalogue.config.yml keeps its entry in
 // a hidden folder at its root (`source_dir`, default `.artifact/`): <slug>.md,
-// its images beside it, and optionally icon.png. This reads that folder from
+// its images beside it, and optionally icon.png, icon-macos.png and wordmark.svg. This reads that folder from
 // the repo's default branch, writes projects/<slug>.md and media/<slug>/, and
 // prints what changed. Committing (and `npm run sync` on Cloudflare) stays a
 // separate, reviewable step, so the build itself never needs the network.
@@ -101,13 +101,26 @@ function importSource(repo, source) {
       .ICON_FILES(slug)
       .filter((name) => entries.length === 1 || name.startsWith(`${slug}.`))
       .find((name) => assets.some((a) => a.name === name));
+    const macName = schema
+      .ICON_MACOS_FILES(slug)
+      .filter((name) => entries.length === 1 || name.startsWith(`${slug}.`))
+      .find((name) => assets.some((a) => a.name === name));
+    const wordmarkName = schema
+      .WORDMARK_FILES(slug)
+      .filter((name) => entries.length === 1 || name.startsWith(`${slug}.`))
+      .find((name) => assets.some((a) => a.name === name));
     const referenced = new Set((data.media || []).map((m) => m.src).filter((src) => src && !isRemote(src)));
+    // The entry's own 1200×630 link-preview image travels like any other media.
+    if (data.og_image && !isRemote(String(data.og_image))) referenced.add(String(data.og_image));
     for (const src of referenced) {
       if (!assets.some((a) => a.name === src)) throw new Error(`${repo}: ${slug}.md uses ${src}, which isn't in ${folder}/`);
     }
 
     data.media = (data.media || []).map((m) => (m.src && !isRemote(m.src) ? { ...m, src: `${slug}/${m.src}` } : m));
+    if (data.og_image && !isRemote(String(data.og_image))) data.og_image = `${slug}/${data.og_image}`;
     if (iconName) data.icon = `${slug}/${iconName.replace(`${slug}.`, "")}`;
+    if (macName) data.icon_macos = `${slug}/${macName.replace(`${slug}.`, "")}`;
+    if (wordmarkName) data.wordmark = `${slug}/${wordmarkName.replace(`${slug}.`, "")}`;
     data.source = repo;
     data.source_commit = source.commit;
 
@@ -124,6 +137,8 @@ function importSource(repo, source) {
     const wanted = new Map();
     for (const src of referenced) wanted.set(src, src);
     if (iconName) wanted.set(iconName, iconName.replace(`${slug}.`, ""));
+    if (macName) wanted.set(macName, macName.replace(`${slug}.`, ""));
+    if (wordmarkName) wanted.set(wordmarkName, wordmarkName.replace(`${slug}.`, ""));
     for (const [from, to] of wanted) {
       const bytes = assets.find((a) => a.name === from).read();
       const dest = path.join(mediaDir, to);

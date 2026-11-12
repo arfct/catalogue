@@ -58,6 +58,20 @@ import overwrites them. Change them in their repo instead. The README's
 "Entries from other repos" section has the commands. Dot folders are skipped
 by most search tools (ripgrep included), so look in `.artifact/` directly.
 
+## Link previews
+
+Every page carries Open Graph and Twitter tags (README "Link previews"). The
+build renders the preview images with sharp into `/og/` (cached in `.cache/og/`,
+which is gitignored): each entry's first image fitted to 1200×630 for
+`og:image`, and a composed card for X, which `_worker.js` (a Cloudflare Pages
+worker) serves as `twitter:image` to Twitterbot only. The entry fields that
+feed them are `summary` (the one-line description), `icon` / `icon_macos`,
+`wordmark` and `og_image` (an entry's own X card, 1200×630; optional, since the
+composed card is the default). They need `url:` in the config. A preview image
+that can't be rendered fails `npm run build`, naming the file and the reason;
+fix or replace that file. Text on the cards is drawn from fonts, with
+fallbacks for other scripts and emoji; a character no font has is dropped.
+
 ## Common tasks
 
 **Check entries** — `npm run check` after any change to `projects/`, and
@@ -99,4 +113,5 @@ any content change.
   rerun with `--adopt` if the repo's copy should replace it.
 - Images 404 in production on Cloudflare: media wasn't synced to R2.
 - Build fails: `npm run build` locally shows the real error; frontmatter YAML
-  is the usual suspect.
+  is the usual suspect. `link preview: could not render <file> from <source>`
+  means an entry's image (or icon, or wordmark) can't be read.

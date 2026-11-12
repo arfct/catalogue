@@ -8,6 +8,24 @@ author: Your Name
 accent_color: "#1a1a1a"
 # url: https://yourname.github.io/catalogue  # required for og:image absolute URLs
 
+# Link previews (the card a URL becomes in iMessage, Slack, X…). They need
+# `url` above. `accent_color` doubles as theme-color (override: theme_color).
+# icon: img/icon.png          # square site icon (PNG, JPEG or SVG, 180 px or more):
+#                             # the favicon, apple-touch-icon, and the preview icon
+# preview:
+#   background: "#f2f2f2"     # behind letterboxed images in generated 1200×630 cards
+#   icon_background: "#ffffff" # behind icons; iOS shows transparency as black
+#   image: img/card.png       # the card for the index and pages; default: generated
+#                             # from the icon, the wordmark (or title) and the description
+#   image_alt: Your Name's catalogue
+#   post_layout: true         # iMessage's post layout (description, icon beside image)
+#   fonts:                    # for the composed X cards: font files or package paths
+#     title: "@fontsource/inter/files/inter-latin-600-normal.woff"
+#     text: "@fontsource/inter/files/inter-latin-400-normal.woff"
+#     label: "@fontsource/inter/files/inter-latin-500-normal.woff"
+#   colors: { background: "#ffffff", text: "#1a1a1a", muted: "#767676", panel: "#f2f2f2" }
+# wordmark: img/wordmark.svg  # the site's wordmark, signing the X cards (else the title)
+
 # Where things live. The defaults put the catalogue index at the site root and
 # each entry at /p/<slug>/. Set catalog_path to mount the catalogue elsewhere
 # (e.g. /work/) when a homepage page owns /.
