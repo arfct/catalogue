@@ -34,6 +34,16 @@ const STORE_TAGS = {
 
 const ICON_SHAPES = ["squircle", "circle", "none"];
 
+// Where a project stands, in the order the index lists them within a group:
+// released work first, retired work last. An entry without one counts as wip.
+const STATUSES = {
+  released: "Released",
+  beta: "Beta",
+  wip: "In progress",
+  retired: "Retired",
+};
+const STATUS_ORDER = Object.keys(STATUSES);
+
 function loadConfig(file = CONFIG_FILE) {
   return yaml.load(fs.readFileSync(file, "utf8")) || {};
 }
@@ -111,7 +121,7 @@ function parseEntry(text) {
 // The order fields are written in, matching projects/_sample.md. Anything else
 // follows, in the order the author wrote it.
 const FIELD_ORDER = [
-  "title", "date", "category", "tags", "url", "links", "media", "media_type", "icon", "icon_macos", "icon_shape", "wordmark", "summary",
+  "title", "date", "status", "category", "tags", "url", "links", "media", "media_type", "icon", "icon_macos", "icon_shape", "wordmark", "summary",
   "og_image", "client", "role", "credits", "formerly", "unconfirmed", "source", "source_commit",
 ];
 
@@ -157,6 +167,8 @@ module.exports = {
   BUILTIN_LINK_KINDS,
   STORE_TAGS,
   ICON_SHAPES,
+  STATUSES,
+  STATUS_ORDER,
   ICON_FILES,
   ICON_MACOS_FILES,
   WORDMARK_FILES,

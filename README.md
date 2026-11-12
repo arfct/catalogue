@@ -152,6 +152,7 @@ Each project is a Markdown file in `projects/` with YAML frontmatter.
 ---
 title: Project Title                 # required
 date: 2024-06                        # required: when it happened (YYYY-MM or YYYY)
+status: released                     # released | beta | wip | retired; the index sorts by it
 category: project                    # one of `categories:` in the config; optional with only one
 tags: [print, identity]              # optional; from tags.base.yml or tags.yml (see Tags)
 url: https://my-project.example      # optional: the project's own page, shown as Link
@@ -216,6 +217,13 @@ and anything else you keep about them; the build fills those in, and a login
 it doesn't list shows as itself, linked to its GitHub profile. The checker
 warns about logins missing from `contributors.yml` when the file exists.
 Someone without a GitHub account is an object with a `name`.
+
+**Status** says where a project stands: `released` (live in a store or on the
+web), `beta` (TestFlight, a public or private beta, early access), `wip` (in
+progress, not yet shareable) or `retired` (no longer maintained or available).
+Within each group the index lists released work first, then beta, wip and
+retired, newest first within each, and each card shows its status beside the
+date. An entry without a status counts as `wip`, and the checker warns.
 
 **Categories** group the index. Set `categories:` in the config (for example
 work, writing, tools) and give each entry a `category`. With one category, the
