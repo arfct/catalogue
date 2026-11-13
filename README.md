@@ -152,7 +152,7 @@ Each project is a Markdown file in `projects/` with YAML frontmatter.
 ---
 title: Project Title                 # required
 date: 2024-06                        # required: when it happened (YYYY-MM or YYYY)
-status: released                     # released | beta | wip | retired; the index sorts by it
+status: released                     # released | beta | wip | retired; cards show all but released
 category: project                    # one of `categories:` in the config; optional with only one
 tags: [print, identity]              # optional; from tags.base.yml or tags.yml (see Tags)
 url: https://my-project.example      # optional: the project's own page, shown as Link
@@ -196,7 +196,7 @@ reference entry) are excluded from the published site.
 at (`app_store` must be `apps.apple.com`, and so on). Add your own under
 `link_kinds:` in `catalogue.config.yml`.
 
-**Icons** are shown beside the title on the entry and on its index card, never
+**Icons** are shown beside the title on the entry and at the right of its index card, never
 as one of the images. There are two kinds, and either alone is enough:
 
 - `icon` (`icon.png` or `icon.svg` in `.artifact/`): the plain square art
@@ -221,9 +221,9 @@ Someone without a GitHub account is an object with a `name`.
 **Status** says where a project stands: `released` (live in a store or on the
 web), `beta` (TestFlight, a public or private beta, early access), `wip` (in
 progress, not yet shareable) or `retired` (no longer maintained or available).
-Within each group the index lists released work first, then beta, wip and
-retired, newest first within each, and each card shows its status beside the
-date. An entry without a status counts as `wip`, and the checker warns.
+The index lists each group newest first. A card shows its status after the
+date only when it isn't `released` ("Beta", "In progress", "Retired"). An entry
+without a status counts as `wip`, and the checker warns.
 
 **Categories** group the index. Set `categories:` in the config (for example
 work, writing, tools) and give each entry a `category`. With one category, the

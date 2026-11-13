@@ -217,6 +217,13 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addFilter("tagLabel", (tag) => tags.get(String(tag))?.label || tag);
 
   // A status as the index labels it: released, beta, wip or retired.
+  // The index card's description: `summary`, else the body's opening
+  // sentences. The card clamps it to two lines.
+  eleventyConfig.addFilter("cardSummary", (entry) =>
+    (entry.data.summary && linkPreview.summarize(entry.data.summary, 300)) ||
+    linkPreview.summarize(linkPreview.readBody(entry.inputPath))
+  );
+
   eleventyConfig.addFilter("statusLabel", (status) => schema.STATUSES[status] || schema.STATUSES.wip);
 
   // How an entry's date reads: as written, YYYY-MM or YYYY.
@@ -240,11 +247,7 @@ module.exports = function (eleventyConfig) {
     const groups = schema.categories(config).map((c) => ({ ...c, entries: [] }));
     const entries = api.getFilteredByGlob("projects/*.md").filter((e) => !e.fileSlug.startsWith("_"));
     const when = (e) => String(e.data.date instanceof Date ? e.data.date.toISOString() : e.data.date ?? "");
-    const rank = (e) => {
-      const i = schema.STATUS_ORDER.indexOf(e.data.status || "wip");
-      return i < 0 ? schema.STATUS_ORDER.indexOf("wip") : i;
-    };
-    for (const entry of entries.sort((a, b) => rank(a) - rank(b) || when(b).localeCompare(when(a)))) {
+    for (const entry of entries.sort((a, b) => when(b).localeCompare(when(a)))) {
       (groups.find((g) => g.id === entry.data.category) || groups[0]).entries.push(entry);
     }
     return groups.filter((g) => g.entries.length);

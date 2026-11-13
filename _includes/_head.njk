@@ -45,6 +45,9 @@
    alternate (an empty href is enough). Other platforms ignore the link. #}
 {% if lp.postLayout %}<link rel="alternate" type="application/activity+json" href="">{% endif %}
 
+{# Inline so the opt-in is in place the moment Chrome renders the new page;
+   from main.css it was sometimes not yet applied, and the zoom-in skipped. #}
+<style>@view-transition { navigation: auto; }</style>
 <link rel="stylesheet" href="/styles/main.css">
 <link rel="stylesheet" href="/styles/custom.css">
 <style>:root { --accent: {{ site.accent_color | default("#1a1a1a") }}; }</style>

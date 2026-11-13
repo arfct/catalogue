@@ -89,7 +89,7 @@ layout: layout.njk
               <img
                 src="{{ item.src | mediaUrl }}"
                 alt="{{ item.alt or title }}"
-                loading="lazy"
+                {% if loop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %}
               >
             {% endif %}
           </figure>

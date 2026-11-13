@@ -26,19 +26,19 @@ permalink: "{{ site.catalog_path }}"
             >
           </div>
         {% endif %}
+        {% set status = entry.data.status or "wip" %}
         <div class="entry-card__meta">
-          {% if entry.data.tags %}
-            <ul class="tag-line">
-              {% for tag in entry.data.tags %}
-                <li>{{ tag | tagLabel }}</li>
-              {% endfor %}
-            </ul>
-          {% endif %}
-          <h2 class="entry-card__title">
-            {% if entry.data.icon_macos %}<img class="entry-card__icon app-icon app-icon--macos" src="{{ entry.data.icon_macos | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% elif entry.data.icon %}<img class="entry-card__icon app-icon app-icon--{{ entry.data.icon_shape or 'squircle' }}" src="{{ entry.data.icon | mediaUrl }}" alt="" width="24" height="24" loading="lazy">{% endif %}
-            {{ entry.data.title }}
-          </h2>
-          <p class="entry-card__date">{{ entry.data.date | entryDate }}{% set status = entry.data.status or "wip" %}<span class="entry-card__status entry-card__status--{{ status }}">{{ status | statusLabel }}</span></p>
+          <ul class="tag-line entry-card__line">
+            <li class="entry-card__date">{{ entry.data.date | entryDate }}</li>
+            {% if status != "released" %}<li class="entry-card__status entry-card__status--{{ status }}">{{ status | statusLabel }}</li>{% endif %}
+            {% for tag in entry.data.tags %}
+              <li>{{ tag | tagLabel }}</li>
+            {% endfor %}
+          </ul>
+          <h2 class="entry-card__title">{{ entry.data.title }}</h2>
+          {% if entry.data.icon_macos %}<img class="entry-card__icon app-icon app-icon--macos" src="{{ entry.data.icon_macos | mediaUrl }}" alt="" width="40" height="40" loading="lazy">{% elif entry.data.icon %}<img class="entry-card__icon app-icon app-icon--{{ entry.data.icon_shape or 'squircle' }}" src="{{ entry.data.icon | mediaUrl }}" alt="" width="40" height="40" loading="lazy">{% endif %}
+          {% set blurb = entry | cardSummary %}
+          {% if blurb %}<p class="entry-card__desc">{{ blurb }}</p>{% endif %}
         </div>
       </a>
     {% endfor %}
