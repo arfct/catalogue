@@ -391,6 +391,14 @@ To give the site a homepage and move the catalogue off `/`, set `catalog_path`
 (e.g. `/work/`) and `entry_path` in `catalogue.config.yml`, and add a page with
 `permalink: /`.
 
+Files that must be published at an exact path exactly as they are (pages kept
+from an older site, a domain verification file) go in `static/`:
+`static/<path>` is copied to `/<path>` without being processed. On Cloudflare
+Pages, `static/privacy.html` answers at `/privacy`, query string intact.
+
+On Cloudflare Pages, `_worker.js` also redirects `www.<domain>` to the bare
+domain with a 301, so attach both as custom domains.
+
 ---
 
 ## Updating your work
@@ -439,6 +447,7 @@ tags.base.yml          ← the template's base tags (don't edit; it updates with
 tags.yml               ← optional: the site's own tags, added by the rules under Tags
 contributors.yml       ← optional: names and links for credited GitHub logins
 pages/                 ← standalone pages (_sample.md is the reference; 404.njk)
+static/                ← optional: files published at the same path, unprocessed
 media/                 ← images (committed, synced to R2 or served directly)
 styles/                ← main.css (theme) and custom.css (your overrides)
 _includes/             ← page templates (don't need to touch)

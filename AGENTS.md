@@ -33,6 +33,10 @@ Frontmatter beyond `title` and `description`:
 Pages never appear in navigation automatically. Add them to `nav:` in
 `catalogue.config.yml` to link them; leaving one out is how it stays unlisted.
 
+`static/` (optional) holds files published at the same path without being
+processed, such as pages carried over from an older site: `static/privacy.html`
+answers at `/privacy` on Cloudflare Pages. Keep them out of `pages/`.
+
 `pages/404.njk` builds to `/404.html`, which hosts serve for unmatched paths.
 Don't delete it: without it Cloudflare Pages falls back to `/index.html` and
 returns HTTP 200, turning every mistyped URL into a soft 404.
