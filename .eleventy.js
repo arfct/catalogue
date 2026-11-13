@@ -280,6 +280,15 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("_worker.js");
   eleventyConfig.addPassthroughCopy("_routes.json");
 
+  // Files a site needs at exact paths and as they are, not as templates (pages
+  // carried over from an older site, verification files): static/<path> is
+  // published at /<path> unchanged. On Cloudflare Pages, static/privacy.html
+  // answers at /privacy.
+  if (fs.existsSync("static")) {
+    eleventyConfig.addPassthroughCopy({ static: "/" });
+    eleventyConfig.ignores.add("static/**");
+  }
+
   // Host redirect rules, if the site has any (Cloudflare Pages / Netlify format)
   if (fs.existsSync("_redirects")) {
     eleventyConfig.addPassthroughCopy("_redirects");

@@ -22,6 +22,12 @@ export default {
   async fetch(request, env, ctx) {
     // If anything below throws, serve the static file rather than an error page.
     ctx?.passThroughOnException?.();
+    // www.<domain> is the same site: send it to the bare domain, path and query kept.
+    const url = new URL(request.url);
+    if (url.hostname.startsWith("www.")) {
+      url.hostname = url.hostname.slice(4);
+      return Response.redirect(url.toString(), 301);
+    }
     const response = await env.ASSETS.fetch(request);
     if (!(response.headers.get("content-type") || "").includes("text/html")) return response;
     const html = new Response(response.body, response);
