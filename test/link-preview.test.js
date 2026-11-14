@@ -399,3 +399,10 @@ test("a photo stored sideways with an EXIF orientation is turned upright", async
   const xpx = (px2, py) => [...xd.data.subarray((py * 1200 + px2) * 3, (py * 1200 + px2) * 3 + 3)];
   assert.ok(xpx(700, 315).every((v) => v > 230), `x card beside a tall photo ${xpx(700, 315)}`);
 });
+
+test("plainText drops Markdown backslash escapes and never reads them as emphasis", () => {
+  const { plainText } = require("../scripts/lib/link-preview");
+  assert.strictEqual(plainText("On a planet in exo\\*space, the ground is one face."), "On a planet in exo*space, the ground is one face.");
+  assert.strictEqual(plainText("a\\*b and c\\*d"), "a*b and c*d");
+  assert.strictEqual(plainText("snake\\_case and *italic*"), "snake_case and italic");
+});

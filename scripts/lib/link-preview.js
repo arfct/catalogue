@@ -26,7 +26,11 @@ const DESCRIPTION_MAX = 200;
 
 // Markdown (or HTML) to one line of plain text.
 function plainText(markdown) {
+  // Backslash escapes (exo\*space) are set aside first, so an escaped * or _
+  // is never read as emphasis, and put back as the bare character at the end.
+  const escaped = [];
   return String(markdown ?? "")
+    .replace(/\\([\\`*_{}\[\]()#+\-.!|~<>])/g, (_, c) => `\u0000${escaped.push(c) - 1}\u0000`)
     .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, "") // frontmatter
     .replace(/```[\s\S]*?```/g, " ") // fenced code
     .replace(/<!--[\s\S]*?-->/g, " ")
@@ -42,6 +46,7 @@ function plainText(markdown) {
     .replace(/(^|[^\w*])[*_](?!\s)(.+?)(?<!\s)[*_](?![\w*])/g, "$1$2") // italic
     .replace(/`([^`]*)`/g, "$1") // inline code
     .replace(/&nbsp;/g, " ")
+    .replace(/\u0000(\d+)\u0000/g, (_, i) => escaped[i])
     .replace(/\s+/g, " ")
     .trim();
 }
