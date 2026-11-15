@@ -48,8 +48,12 @@
 {# Inline so the opt-in is in place the moment Chrome renders the new page;
    from main.css it was sometimes not yet applied, and the zoom-in skipped. #}
 <style>@view-transition { navigation: auto; }</style>
-<link rel="stylesheet" href="/styles/main.css">
-<link rel="stylesheet" href="/styles/custom.css">
+{#- The build's commit in the query, so a browser holding an older stylesheet
+    (artifact.com's browser cache keeps them for hours) fetches the one this
+    page was built with. -#}
+{% set v = ("?v=" + build.commit) if build.commit else "" %}
+<link rel="stylesheet" href="/styles/main.css{{ v }}">
+<link rel="stylesheet" href="/styles/custom.css{{ v }}">
 <style>:root { --accent: {{ site.accent_color | default("#1a1a1a") }}; }</style>
 
 {# Google Fonts, per page. A list of css2 family specs, e.g.
@@ -64,7 +68,7 @@
 
 {# A bundled page script, from scripts/pages/<name>.js. Bundled by esbuild
    because browsers cannot resolve bare module specifiers like "three". #}
-{% if script %}<script type="module" src="/js/{{ script }}.js"></script>{% endif %}
+{% if script %}<script type="module" src="/js/{{ script }}.js{{ v }}"></script>{% endif %}
 
 <!-- Prefetch same-origin pages on hover so cross-document view transitions
      land render-ready in Chrome (Safari/Arc already preload). -->
