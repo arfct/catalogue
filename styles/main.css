@@ -380,6 +380,17 @@ body:has(.index-hero) .site-header { display: none; }
   letter-spacing: 0;
 }
 
+/* On index cards the tags keep to one line; what doesn't fit is cut with an
+   ellipsis. Block and inline instead of flex, because text-overflow applies
+   only to inline content. */
+.entry-card__line {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entry-card__line li { display: inline; }
+
 .entry__tags { margin-bottom: calc(var(--gap) * -1); }
 
 /* ─── Entry detail ───────────────────────────────────────────────────────── */
