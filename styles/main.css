@@ -472,7 +472,11 @@ body:has(.index-hero) .site-header { display: none; }
 }
 
 .entry__media--1 { grid-template-columns: 1fr; }
-.entry__media--3 .entry__figure:first-child { grid-column: 1 / -1; }
+/* The first image takes the whole width, four cells of the grid, so the index
+   thumbnail grows into it on the view transition instead of sliding to a
+   slot its own size. The rest pair up below; an unpaired last one spans too. */
+.entry__figure:first-child,
+.entry__figure:last-child:nth-child(even) { grid-column: 1 / -1; }
 
 .entry__figure {
   aspect-ratio: 4 / 3;
@@ -495,7 +499,6 @@ body:has(.index-hero) .site-header { display: none; }
   .entry__media,
   .entry__media--1,
   .entry__media--3 { grid-template-columns: 1fr; }
-  .entry__media--3 .entry__figure:first-child { grid-column: auto; }
 }
 
 /* ─── Footer ─────────────────────────────────────────────────────────────── */
