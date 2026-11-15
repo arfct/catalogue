@@ -10,9 +10,20 @@ permalink: "{{ site.catalog_path }}"
 </div>
 
 {% set grouped = collections.entryGroups.length > 1 %}
+<div class="index-body{% if grouped %} index-body--toc{% endif %}">
+{% if grouped %}
+<nav class="index-toc" aria-label="Sections">
+  <ul class="index-toc__list">
+    {% for group in collections.entryGroups %}
+      <li><a href="#{{ group.id }}">{{ group.label }}</a> <span class="index-toc__count">{{ group.entries.length }}</span></li>
+    {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+<div class="index-groups">
 {% for group in collections.entryGroups %}
-<section class="entry-group entry-group--{{ group.id }}">
-  {% if grouped %}<h2 class="entry-group__label">{{ group.label }}</h2>{% endif %}
+<section class="entry-group entry-group--{{ group.id }}"{% if grouped %} id="{{ group.id }}" aria-labelledby="{{ group.id }}-label"{% endif %}>
+  {% if grouped %}<h2 class="entry-group__label" id="{{ group.id }}-label">{{ group.label }}</h2>{% endif %}
   <div class="entry-grid">
     {% for entry in group.entries %}
       {% set firstMedia = entry.data.media[0] %}
@@ -45,3 +56,5 @@ permalink: "{{ site.catalog_path }}"
   </div>
 </section>
 {% endfor %}
+</div>
+</div>

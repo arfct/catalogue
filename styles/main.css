@@ -198,6 +198,45 @@ main {
   margin-bottom: var(--gap);
 }
 
+/* ─── Section contents on the index ─────────────────────────────────────── */
+/* With more than one category, a list of the sections with their entry
+   counts: a sticky right-hand column on wide screens, a line of links above
+   the grid on narrow ones. Empty groups are never rendered, so every link
+   has a target. */
+.index-toc__list {
+  list-style: none;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.index-toc a { color: var(--text); text-decoration: none; }
+.index-toc a:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+.index-toc__count { color: var(--muted); font-variant-numeric: tabular-nums; }
+.entry-group[id] { scroll-margin-top: var(--gap); }
+
+@media (min-width: 64rem) {
+  .index-body--toc {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 11rem;
+    gap: calc(var(--gap) * 2);
+    align-items: start;
+  }
+  .index-body--toc .index-toc {
+    grid-column: 2;
+    grid-row: 1;
+    position: sticky;
+    top: var(--gap);
+  }
+  .index-toc__list { display: grid; gap: 0.5rem; }
+}
+
+@media (max-width: 63.99rem) {
+  .index-toc { margin-bottom: calc(var(--gap) * 1.5); }
+  .index-toc__list { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+}
+
+@media print { .index-toc { display: none; } }
+
 /* ─── Index hero ─────────────────────────────────────────────────────────── */
 .index-hero {
   padding: calc(var(--gap) * 3) 0 calc(var(--gap) * 2.5);
@@ -341,6 +380,17 @@ body:has(.index-hero) .site-header { display: none; }
   letter-spacing: 0;
 }
 
+/* On index cards the tags keep to one line; what doesn't fit is cut with an
+   ellipsis. Block and inline instead of flex, because text-overflow applies
+   only to inline content. */
+.entry-card__line {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.entry-card__line li { display: inline; }
+
 .entry__tags { margin-bottom: calc(var(--gap) * -1); }
 
 /* ─── Entry detail ───────────────────────────────────────────────────────── */
@@ -422,7 +472,11 @@ body:has(.index-hero) .site-header { display: none; }
 }
 
 .entry__media--1 { grid-template-columns: 1fr; }
-.entry__media--3 .entry__figure:first-child { grid-column: 1 / -1; }
+/* The first image takes the whole width, four cells of the grid, so the index
+   thumbnail grows into it on the view transition instead of sliding to a
+   slot its own size. The rest pair up below; an unpaired last one spans too. */
+.entry__figure:first-child,
+.entry__figure:last-child:nth-child(even) { grid-column: 1 / -1; }
 
 .entry__figure {
   aspect-ratio: 4 / 3;
@@ -445,7 +499,6 @@ body:has(.index-hero) .site-header { display: none; }
   .entry__media,
   .entry__media--1,
   .entry__media--3 { grid-template-columns: 1fr; }
-  .entry__media--3 .entry__figure:first-child { grid-column: auto; }
 }
 
 /* ─── Footer ─────────────────────────────────────────────────────────────── */
